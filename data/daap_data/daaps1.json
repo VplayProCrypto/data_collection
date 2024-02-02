@@ -1,0 +1,1351 @@
+{
+    "success": true,
+    "results": [
+      {
+        "dappId": 3,
+        "name": "CryptoKitties",
+        "description": "In CryptoKitties, users collect and breed oh-so-ad",
+        "fullDescription": "<p>In CryptoKitties, users collect and breed oh-so-adorable creatures that we call CryptoKitties! Each kitty has a unique genome that defines its appearance and traits. Players can breed their kitties to create new furry friends and unlock rare cattributes.</p>",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/3/cryptokitties-dapp-games-eth-logo_43af8137d6219e1fd08b52d9cdfc9447.png",
+        "link": "https://dappradar.com/dapp/cryptokitties",
+        "website": "https://www.cryptokitties.co",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "discord",
+            "url": "https://discord.gg/3GvT66U",
+            "type": "discord"
+          },
+          {
+            "title": "facebook",
+            "url": "https://www.facebook.com/CryptoKitties/",
+            "type": "facebook"
+          },
+          {
+            "title": "instagram",
+            "url": "https://www.instagram.com/cryptokitties/",
+            "type": "instagram"
+          },
+          {
+            "title": "medium",
+            "url": "https://medium.com/cryptokitties",
+            "type": "medium"
+          },
+          {
+            "title": "other",
+            "url": "https://www.cryptokitties.co/blog/",
+            "type": "other"
+          },
+          {
+            "title": "reddit",
+            "url": "https://www.reddit.com/r/CryptoKitties/",
+            "type": "reddit"
+          },
+          {
+            "title": "twitter",
+            "url": "https://twitter.com/cryptokitties",
+            "type": "twitter"
+          },
+          {
+            "title": "youtube",
+            "url": "https://www.youtube.com/channel/UClUgQBJcxAmHjOQgV4QgVXg",
+            "type": "youtube"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 4,
+        "name": "CryptoFighters",
+        "description": "Battle on the blockchain!",
+        "fullDescription": "<p>Battle on the blockchain!</p>",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/4/cryptofighters-dapp-games-ethereum-logo_95f24cd5a0610de0c14eb8d2b6069611.png",
+        "link": "https://dappradar.com/dapp/cryptofighters",
+        "website": "https://cryptofighters.io",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "reddit",
+            "url": "https://www.reddit.com/r/CryptoFighters/",
+            "type": "reddit"
+          },
+          {
+            "title": "telegram",
+            "url": "https://t.me/CryptoFighters",
+            "type": "telegram"
+          },
+          {
+            "title": "twitter",
+            "url": "https://twitter.com/CryptoFighters",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 8,
+        "name": "AceBusters",
+        "description": null,
+        "fullDescription": null,
+        "logo": null,
+        "link": "https://dappradar.com/dapp/acebusters",
+        "website": "https://www.acebusters.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 9,
+        "name": "Etheroll",
+        "description": "Our Ethereum dice game is provably-fair, has a low",
+        "fullDescription": "Our Ethereum dice game is provably-fair, has a low 1% house edge and no sign-ups or deposits.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/etheroll",
+        "website": "https://etheroll.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 10,
+        "name": "vDice",
+        "description": null,
+        "fullDescription": null,
+        "logo": null,
+        "link": "https://dappradar.com/dapp/vdice",
+        "website": "https://www.vdice.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 12,
+        "name": "CryptoPunks",
+        "description": "The first \"Non-Fungible Token\"",
+        "fullDescription": "<p>10,000 unique collectible characters with proof of ownership stored on the Ethereum blockchain. The project that inspired the modern CryptoArt movement. The first \"Non-Fungible Token\" and inspiration for the Ethereum ERC-721 standard that powers most digital art and collectibles.</p>",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/12/cryptopunks-dapp-collectibles-eth-logo_51a1d3949f57d12b1e9dd04bf3ea4eb3.png",
+        "link": "https://dappradar.com/dapp/cryptopunks",
+        "website": "https://www.larvalabs.com/cryptopunks",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "collectibles"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 13,
+        "name": "OpenSea",
+        "description": "OpenSea is the first and largest peer-to-peer marketplace.",
+        "fullDescription": "<p>OpenSea is the first and largest peer-to-peer marketplace for crypto collectibles, which include gaming items, digital art, and other virtual goods backed by a blockchain.</p>",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/13/opensea-dapp-marketplaces-ethereum-logo_a3421ac6e32d529db3c8293f4cfa9bcd.png",
+        "link": "https://dappradar.com/dapp/opensea",
+        "website": "https://opensea.io",
+        "chains": [
+          "arbitrum",
+          "avalanche",
+          "base",
+          "bnb-chain",
+          "ethereum",
+          "klaytn",
+          "optimism",
+          "polygon",
+          "solana"
+        ],
+        "categories": [
+          "marketplaces"
+        ],
+        "socialLinks": [
+          {
+            "title": "discord",
+            "url": "https://discord.gg/zAHt7Tb",
+            "type": "discord"
+          },
+          {
+            "title": "facebook",
+            "url": "https://facebook.com/projectopensea",
+            "type": "facebook"
+          },
+          {
+            "title": "medium",
+            "url": "https://medium.com/@opensea",
+            "type": "medium"
+          },
+          {
+            "title": "reddit",
+            "url": "https://reddit.com/r/opensea",
+            "type": "reddit"
+          },
+          {
+            "title": "twitter",
+            "url": "https://twitter.com/projectopensea",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 14,
+        "name": "ETHERCRAFT",
+        "description": "A decentralized blockchain RPG.\r\n",
+        "fullDescription": "<p>A decentralized blockchain RPG.</p>\r\n",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ethercraft",
+        "website": "https://ethercraft.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discord.gg/ae9dzYa",
+            "type": "discord"
+          },
+          {
+            "title": "Official Discord",
+            "url": "https://discord.gg/WAJdrvw",
+            "type": "discord"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/Ethercraft_io",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/ethercraft_io",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/ethercraft_io",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 17,
+        "name": "Ethermon",
+        "description": "Re-launched in 2019 Ethermon.io is the communit",
+        "fullDescription": "<p>Re-launched in 2019 Ethermon.io is the community driven version of the popular Etheremon.com under an entire new team. Players can continue to use their old and new Ether Monsters (EtherMon) to join forces and continue their journey in this crypto based battle games where they capture, train, and transform their collectables to make their permanent mark on the blockchain.</p>\r\n",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/17/ethermon-dapp-games-eth-logo_9e9239828819afeeccc308f64435fff6.png",
+        "link": "https://dappradar.com/dapp/ethermon",
+        "website": "https://www.ethermon.io",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discordapp.com/invite/p7wBXc9",
+            "type": "discord"
+          },
+          {
+            "title": "Official Discord",
+            "url": "https://discord.gg/xgJpuzc",
+            "type": "discord"
+          },
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/etheremon",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/etheremon/",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/ethermon",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/myetheremon",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/Ethermon_io",
+            "type": "twitter"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/myetheremon",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 18,
+        "name": "Edgeless",
+        "description": "The Ethereum smart contract powered Casino that",
+        "fullDescription": "<p>The Ethereum smart contract powered Casino that offers 0% house edge games and solves the casino transparency question once and for all.</p>\r\n",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/18/edgeless-dapp-gambling-eth-logo_dd6d3dee2958799c7bca33b8a55ecaad.png",
+        "link": "https://dappradar.com/dapp/edgeless",
+        "website": "https://edgeless.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [
+          {
+            "title": "BitcoinTalk",
+            "url": "https://bitcointalk.org/index.php?topic=1718384.0",
+            "type": "other"
+          },
+          {
+            "title": "CoinMarketCap",
+            "url": "https://coinmarketcap.com/currencies/edgeless/",
+            "type": "other"
+          },
+          {
+            "title": "GitHub",
+            "url": "https://github.com/edgeless-casino",
+            "type": "github"
+          },
+          {
+            "title": "Official Discord",
+            "url": "https://discordapp.com/invite/h8a8Zs3",
+            "type": "discord"
+          },
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/EdgelessCasino",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/Edgeless",
+            "type": "medium"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/Edgeless/",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/joinchat/FXRVHBFKg-YU0KqZXTCGbQ",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/edgelessproject",
+            "type": "twitter"
+          },
+          {
+            "title": "Official YouTube",
+            "url": "https://www.youtube.com/channel/UC_7GBNR9N2UATqmdEeGjBvA",
+            "type": "youtube"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 19,
+        "name": "ETHERBOTS",
+        "description": "Decentralised Robot Wars on the blockchain.",
+        "fullDescription": "Decentralised Robot Wars on the blockchain.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/etherbots",
+        "website": "https://etherbots.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discordapp.com/invite/jbuYx9w",
+            "type": "discord"
+          },
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@etherbots/",
+            "type": "medium"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/etherbots",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 20,
+        "name": "CryptoJingles",
+        "description": "Compose the best jingles on the blockchain, you ca",
+        "fullDescription": "Compose the best jingles on the blockchain, you can share them, sell them and love them",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptojingles",
+        "website": "http://cryptojingles.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "collectibles"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/CryptoJingles/",
+            "type": "reddit"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 22,
+        "name": "KryptoWar",
+        "description": "KryptoWar is a war game based on the Ethereum Bloc",
+        "fullDescription": "KryptoWar is a war game based on the Ethereum Blockchain. With KryptoWar you can own and lead one of 100 countries.\n\nYou can improve its army by purchasing more soldiers or some new weapons, you can battle rivaling countries or you can sell it to another player on our marketplace (for the price of your choice).\n\nIf you think you got what it takes to lead your country to greatness come and join us on the battlefield! (But please remember that KryptoWar is a game, not an investment!)",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/kryptowar",
+        "website": "https://kryptowar.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 24,
+        "name": "Angel Battles",
+        "description": "Angel Battles is a decentralized application originally built on the Ethereum blockchain in 2018.",
+        "fullDescription": "<p>Angel Battles is a decentralized application originally built on the Ethereum blockchain in 2018. Collect angel, pet, and accessory cards to train, breed, and battle your way to the top of Mt. Zion, the global leaderboard.</p>",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/24/angelbattles-dapp-games-eth-logo_a955e86d3c1a7c4974c9bb71eb65ee22.png",
+        "link": "https://dappradar.com/dapp/angel-battles",
+        "website": "https://www.angelbattles.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "discord",
+            "url": "https://discord.gg/u2xgWuQ",
+            "type": "discord"
+          },
+          {
+            "title": "reddit",
+            "url": "https://www.reddit.com/r/angelbattles/",
+            "type": "reddit"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 25,
+        "name": "Satoshi Futures",
+        "description": "Decentralized binary futures",
+        "fullDescription": "Decentralized binary futures",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/satoshi-futures",
+        "website": "https://satoshifutures.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 26,
+        "name": "Ether Numbers",
+        "description": "Purchase numbers on the block chain",
+        "fullDescription": "Purchase numbers on the block chain",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ether-numbers",
+        "website": "https://ethernumbers.co/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 27,
+        "name": "SportCrypt",
+        "description": "Sports betting exchange utilizing ethereum smart c",
+        "fullDescription": "Sports betting exchange utilizing ethereum smart contracts. Zero fees. Zero KYC. On the mainnet since 2017.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/sportcrypt",
+        "website": "https://www.sportcrypt.com",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/sportcrypt",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/joinchat/H9VK_xKZrN_WTlBTVowpCg",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "http://twitter.com/sportcrypt",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 28,
+        "name": "EthPlace",
+        "description": "Public Cryptoart in the Ethereum network",
+        "fullDescription": "Public Cryptoart in the Ethereum network",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ethplace",
+        "website": "https://ethplace.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 29,
+        "name": "FairGrounds",
+        "description": "A decentralized ecosystem of provably fair chance-",
+        "fullDescription": "A decentralized ecosystem of provably fair chance-based games.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/fairgrounds",
+        "website": "https://fairgrounds.bet",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 30,
+        "name": "EtherFlip",
+        "description": "A Dice Game with a Twist",
+        "fullDescription": "A Dice Game with a Twist",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/etherflip",
+        "website": "https://play.etherflip.co",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 31,
+        "name": "CryptoBots",
+        "description": "A blockchain-based game to find out whose bot army",
+        "fullDescription": "A blockchain-based game to find out whose bot army is the best!",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptobots",
+        "website": "https://cryptobots.me/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/cryptobotsgame",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@cryptobots",
+            "type": "medium"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/cryptobots_game/",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/cryptobotsgame",
+            "type": "telegram"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 33,
+        "name": "Crypto All Stars",
+        "description": "Own your favorite crypto all star as a smart contr",
+        "fullDescription": "Own your favorite crypto all star as a smart contract",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/crypto-all-stars",
+        "website": "https://cryptoallstars.co",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "collectibles"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 34,
+        "name": "Ether Dungeon: Age of Myth",
+        "description": "Ether Dungeon: Age of Myth is a strategic blockcha",
+        "fullDescription": "Ether Dungeon: Age of Myth is a strategic blockchain game in which players collect epic heroes, upgrade powerful equipments, and explore the depth of dungeons in the artificial blockchain world Pangaea Ultima.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ether-dungeon-age-of-myth",
+        "website": "https://etherdungeon.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Helper Tools",
+            "url": "https://explorer.etherdungeon.io/",
+            "type": "other"
+          },
+          {
+            "title": "Information Website",
+            "url": "https://etherdungeon.com/",
+            "type": "other"
+          },
+          {
+            "title": "Official Discord",
+            "url": "https://discord.gg/SWjSmZ5",
+            "type": "discord"
+          },
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@EtherDungeon",
+            "type": "medium"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/etherdungeon/",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/EtherDungeon",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 36,
+        "name": "World of Ether",
+        "description": "Decentralized collectable dueling game on the Ethe",
+        "fullDescription": "Decentralized collectable dueling game on the Ethereum blockchain. Collect, breed, battle. Welcome to the World of Ether.",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/36/worldofether-dapp-games-eth-logo_d90aec24e0f46e9b885cbe85634069c9.png",
+        "link": "https://dappradar.com/dapp/world-of-ether",
+        "website": "https://worldofether.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discordapp.com/invite/HZfCmND",
+            "type": "discord"
+          },
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/WorldofEther",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Instagram",
+            "url": "https://www.instagram.com/worldofether/",
+            "type": "instagram"
+          },
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@worldofether",
+            "type": "medium"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/worldofether",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/worldofether",
+            "type": "twitter"
+          },
+          {
+            "title": "Official YouTube",
+            "url": "https://www.youtube.com/channel/UCfW6SXbBadak-VmMQST445A",
+            "type": "youtube"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 39,
+        "name": "Deus ETH",
+        "description": "Visual novel in post apocalyptic desert.",
+        "fullDescription": "Visual novel in post apocalyptic desert.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/deus-eth",
+        "website": "https://deuseth.com",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/deuseth",
+            "type": "facebook"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 40,
+        "name": "CryptoCities",
+        "description": "Collect, Trade and Win Cities on the Blockchain\t",
+        "fullDescription": "Collect, Trade and Win Cities on the Blockchain\t",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptocities",
+        "website": "https://cryptociti.es/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discord.gg/mFtvVYQ",
+            "type": "discord"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/crypto_cities",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 41,
+        "name": "CryptoCats",
+        "description": "CryptoCats are the first clones of CryptoPunks on the Ethereum blockchain. They launched in late 2017 and only minted 625 cats.",
+        "fullDescription": "<p>CryptoCats are the first clones of CryptoPunks on the Ethereum blockchain. They launched in late 2017 and openly admire Larva Labs and their punks. In total there have only been 625 cats ever minted.These cats are CCAT tokens, stored on the blockchain. However, this was before the ERC-721 token standard for NFTs.The ownership for each of these cats is stored on Ethereum. Being built on blockchain means that by design, these CryptoCats are inherently resistant to modification of ownership. A digital decentralised certificate of authenticity for your CryptoCat.</p>",
+        "logo": "https://dashboard-assets.dappradar.com/geRRcWz9IdTwSrm1/document/41/cryptocats-dapp-games-ethereum-logo_08120026bc61c3e757943d4e2497f8e9.png",
+        "link": "https://dappradar.com/dapp/cryptocats",
+        "website": "http://cryptocats.thetwentysix.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 42,
+        "name": "YouCollect",
+        "description": "Collect, sell and compete for your favorite unique",
+        "fullDescription": "Collect, sell and compete for your favorite unique crypto currency tokens",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/youcollect",
+        "website": "http://www.youcollect.co/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discordapp.com/invite/KEsfYb9",
+            "type": "discord"
+          },
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/YouCollectco-159790501481855/",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@youCollect_co",
+            "type": "medium"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/youCollect_co",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 43,
+        "name": "Crypto Sportz",
+        "description": "Dapp for sports fans and crypto fans",
+        "fullDescription": "Dapp for sports fans and crypto fans",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/crypto-sportz",
+        "website": "https://www.cryptosportz.com",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@cryptosportz",
+            "type": "medium"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/CryptoSportz/",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/cryptosportz",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 45,
+        "name": "Crypto Sprites",
+        "description": "Earn further income from your Crypto Kitties\t",
+        "fullDescription": "Earn further income from your Crypto Kitties\t",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/crypto-sprites",
+        "website": "https://www.CryptoSprites.com",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 46,
+        "name": "WinSome",
+        "description": null,
+        "fullDescription": null,
+        "logo": null,
+        "link": "https://dappradar.com/dapp/winsome",
+        "website": "https://winsome.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 47,
+        "name": "Ethdice",
+        "description": "Ether Dice Gambling",
+        "fullDescription": "Ether Dice Gambling",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ethdice-2",
+        "website": "http://ethdice.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 48,
+        "name": "0xBitcoin",
+        "description": "Tokenized Bitcoin for Ethereum, mined using Proof ",
+        "fullDescription": "Tokenized Bitcoin for Ethereum, mined using Proof of Work GPU and CPU Miners.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/0xbitcoin-2",
+        "website": "https://0xbitcoin.org/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 49,
+        "name": "CryptoSports",
+        "description": "CryptoSports™ is the first fantasy sports and spor",
+        "fullDescription": "CryptoSports™ is the first fantasy sports and sports gaming platform completely implemented on the blockchain. CryptoSports™ is based on an ownership model where participants buy and sell collectable Player Tokens representing real-world professional athletes in major league sports. A participant's ownership of Player Tokens is immutably recorded on the Ethereum blockchain. A participant can assemble a team using the Player Tokens they own and enter this team into fantasy sports contests to win Ξeth based on their team's performance in real world games.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptosports",
+        "website": "http://www.cryptosports721.com?utm_medium=preferred&utm_campaign=launch",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/cryptosports721",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/cryptosports721",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 50,
+        "name": "Cryptoplaces",
+        "description": "CryptoPlaces is a game that lets anyone buy and ow",
+        "fullDescription": "CryptoPlaces is a game that lets anyone buy and own Places as Smart Contracts on the Ethereum Blockchain. As soon as you acquire a smart contract, you take it's ownership and it automatically increases in price. Owners can post anything they like on the contract's wall.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptoplaces",
+        "website": "https://www.cryptoplaces.io",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 51,
+        "name": "Ethereum Bonds",
+        "description": "Ponzi scheme ",
+        "fullDescription": "Ponzi scheme ",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ethereum-bonds",
+        "website": "https://etherbonds.io/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 52,
+        "name": "Winether",
+        "description": "A pick 3 lottery dapp\t",
+        "fullDescription": "A pick 3 lottery dapp\t",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/winether",
+        "website": "http://winether.online",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 53,
+        "name": "CryptoCities.net",
+        "description": "Discover, Collect & Trade Crypto Cities",
+        "fullDescription": "Discover, Collect & Trade Crypto Cities",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptocities-net",
+        "website": "https://cryptocities.net/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 54,
+        "name": "Crypto Tulips",
+        "description": "Digital tulips on Ethereum Blockchain",
+        "fullDescription": "Digital tulips on Ethereum Blockchain",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/crypto-tulips",
+        "website": "https://cryptotulips.me/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/CryptoTulips.me/",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/CryptoTulipsMe/",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 55,
+        "name": "Aethia.co",
+        "description": "Ethergotchi",
+        "fullDescription": "Ethergotchi",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/aethia-co",
+        "website": "https://aethia.co/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 56,
+        "name": "Ether Hell",
+        "description": null,
+        "fullDescription": null,
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ether-hell",
+        "website": "https://etherhell.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 57,
+        "name": "CryptoHorse",
+        "description": "CryptoHorse ECOSYSTEM\nwww.CryptoHorse.ch is the fi",
+        "fullDescription": "CryptoHorse ECOSYSTEM\nwww.CryptoHorse.ch is the first block chain platform in the world where you can buy, sell, collect, breed & race horses as well as develop their community.\nCryptoHorses are digital collectible horses which are created on Ethereum Blockchain. Each horse is unique not only in its appearance or colour but their genetic composition is different which shall be stored on the block chain. They have 9 different colours and 35 different attributes.\nThese CryptoHorses are not just collectible rather they can be bought and sold for Ethereum or bred to create new horses that have varying degree of traits of its parents. Depending on the traits they acquire from its parents, they can be sold or traded on Ethereum blockchain.\nEach CryptoHorse have a particular gender – it can either be a mare or a stallion.\nInitially there shall be 20,000 Gen-0 horses that will be created and stored on Ethereum block chain. There is no provision for creating new horses after the initial 20,000 Gen-0 horses are sold.\nEach of the 20,000 horse is unique and has a price depending on its colour and attribute. Some attributes are rare and some are common. Rarer the attributes, higher is the price.\nThe price of a horse is determined on the basis of following attributes:\n1. Generation 2. Appearance\n3. Colour 4. Name\n5. Special features 6. Speed\n7. Fertility",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptohorse",
+        "website": "http://www.cryptohorse.ch/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Discord",
+            "url": "https://discord.gg/4ghEapG",
+            "type": "discord"
+          },
+          {
+            "title": "Official Facebook",
+            "url": "https://www.facebook.com/TheCryptoHorse/",
+            "type": "facebook"
+          },
+          {
+            "title": "Official Google+",
+            "url": "https://plus.google.com/u/1/113751798309328601123",
+            "type": "google"
+          },
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/cryptohorsehelp",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/likeCryptohorse",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 58,
+        "name": "Etherions",
+        "description": "Collectible dragons with a battle system",
+        "fullDescription": "Collectible dragons with a battle system",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/etherions",
+        "website": "http://www.etherions.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 59,
+        "name": "EthPhoenix",
+        "description": "A self-sustaining, secure and transparent game of ",
+        "fullDescription": "A self-sustaining, secure and transparent game of fear and greed.",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/ethphoenix",
+        "website": "https://ethphoenix.io",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 60,
+        "name": "CryptoSpinners",
+        "description": "Collect, Trade, and Battle Fidget Spinners on the ",
+        "fullDescription": "Collect, Trade, and Battle Fidget Spinners on the Ethereum Blockchain",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptospinners",
+        "website": "http://cryptospinners.org/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Medium",
+            "url": "https://medium.com/@cryptospinners",
+            "type": "medium"
+          },
+          {
+            "title": "Official Reddit",
+            "url": "https://www.reddit.com/r/cryptospinners/",
+            "type": "reddit"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/CryptoSpinners",
+            "type": "twitter"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 61,
+        "name": "ReverseJackpot",
+        "description": "Provably fair coinflip game that has successfuly a",
+        "fullDescription": "Provably fair coinflip game that has successfuly applied Oraclize's random datasource + ledger proof for verifiable on-chain randomness",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/reversejackpot",
+        "website": "https://reversejackpot.com",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 62,
+        "name": "CryptoCuddles",
+        "description": "The CryptoKitties Battle Game",
+        "fullDescription": "The CryptoKitties Battle Game",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/cryptocuddles",
+        "website": "https://cryptocuddles.com",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "games"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Reddit",
+            "url": "http://reddit.com/r/cryptocuddles",
+            "type": "reddit"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 63,
+        "name": "Etherlottery",
+        "description": null,
+        "fullDescription": null,
+        "logo": null,
+        "link": "https://dappradar.com/dapp/etherlottery",
+        "website": "https://etherlottery.co",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "gambling"
+        ],
+        "socialLinks": [],
+        "tags": []
+      },
+      {
+        "dappId": 64,
+        "name": "EscrowMyEther",
+        "description": "P2P Escrow service based on smart contracts",
+        "fullDescription": "P2P Escrow service based on smart contracts",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/escrowmyether",
+        "website": "http://escrowmyether.com/",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [
+          {
+            "title": "Youtube",
+            "url": "https://www.youtube.com/watch?v=T2_XzSlddWI",
+            "type": "youtube"
+          }
+        ],
+        "tags": []
+      },
+      {
+        "dappId": 65,
+        "name": "EtherJack.io",
+        "description": "Crypto Greed Race",
+        "fullDescription": "Crypto Greed Race",
+        "logo": null,
+        "link": "https://dappradar.com/dapp/etherjack-io",
+        "website": "https://etherjack.io",
+        "chains": [
+          "ethereum"
+        ],
+        "categories": [
+          "other"
+        ],
+        "socialLinks": [
+          {
+            "title": "Official Telegram",
+            "url": "https://t.me/EtherJack_io",
+            "type": "telegram"
+          },
+          {
+            "title": "Official Twitter",
+            "url": "https://twitter.com/etherjack_io",
+            "type": "twitter"
+          },
+          {
+            "title": "Whitepaper",
+            "url": "https://etherjack.io/EtherJack.io.pdf",
+            "type": "other"
+          }
+        ],
+        "tags": []
+      }
+    ],
+    "page": 1,
+    "pageCount": 91,
+    "resultCount": 4541,
+    "resultsPerPage": 50
+  }

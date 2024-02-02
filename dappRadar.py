@@ -2,9 +2,12 @@ import json
 import os
 import requests
 import argparse
-from utils import get_error_message, del_none_keys
+from pprint import pprint
+import pandas as pd
+import numpy as np
+from utils import del_none_keys
 
-api_key = 'InrjMd9Bxc6geuaIus7lm2wIDHqjwr3575qt6hYk'
+# api_key = 'InrjMd9Bxc6geuaIus7lm2wIDHqjwr3575qt6hYk'
 
 def append_data_to_file(file_path, new_data):
     # Check if the file exists and is not empty
@@ -25,89 +28,125 @@ def append_data_to_file(file_path, new_data):
         with open(file_path, 'w') as file:
             json.dump(new_data, file, indent=4)
 
-# Example usage
+# # Example usage
 new_data = [{"new_key": "new_value"}]  # Replace with your actual new data
 file_path = 'your_data_file.json'
 append_data_to_file(file_path, new_data)
 
 
-def get_last_page():
-    try: 
-        with open('last_page.txt') as page:
-            last_page_num = int(page.read())
-    except FileNotFoundError:
-        with open('last_page.txt', 'w') as page:
-            page.write('1')
-            last_page_num = 1
-    # except ValueError:
-    #     print("invlaid number")
+# def get_last_page():
+#     try: 
+#         with open('last_page.txt') as page:
+#             last_page_num = int(page.read())
+#     except FileNotFoundError:
+#         with open('last_page.txt', 'w') as page:
+#             page.write('1')
+#             last_page_num = 1
+#     # except ValueError:
+#     #     print("invlaid number")
 
-    return last_page_num
+#     return last_page_num
 
-def update_last_page(page_num):
-    with open('last_page.txt') as f:
-        f.write(str(page_num))
+# def update_last_page(page_num):
+#     with open('last_page.txt') as f:
+#         f.write(str(page_num))
 
-def store_daaps_data(file_path, results_per_page = 50, number_of_pages = 10, chain = 'ethereum'):
-    base_endpoint = 'https://apis.dappradar.com/v2/dapps'
+# def store_daaps_data(file_path, results_per_page = 50, number_of_pages = 10, chain = 'ethereum'):
+#     base_endpoint = 'https://apis.dappradar.com/v2/dapps'
 
-    headers = {
-        'accept': 'application/json',
-        'x-api-key': api_key
-    }
+#     headers = {
+#         'accept': 'application/json',
+#         # 'api-key': api_key
+#     }
 
 
-    for i in range(number_of_pages):
-        last_page_num = get_last_page()
-        print(last_page_num)
-        params = {
-            'chain': chain,
-            'page': last_page_num,
-            'resultsPerPage': results_per_page
-        }
-        r = requests.get(base_endpoint, params = params)
-        print(r)
-        msg = get_error_message(r)
-        if msg:
-            raise ConnectionError(msg)
+#     for i in range(number_of_pages):
+#         last_page_num = get_last_page()
+#         print(last_page_num)
+#         params = {
+#             'chain': chain,
+#             'page': last_page_num,
+#             'resultsPerPage': results_per_page
+#         }
+#         r = requests.get(base_endpoint, params = params)
+#         print(r)
+#         msg = get_error_message(r)
+#         if msg:
+#             raise ConnectionError(msg)
         
-        new_data = r.json()['results']
-        append_data_to_file(file_path = file_path, new_data = json.dumps(new_data))
-        update_last_page(last_page_num + i)
-        print("Appended")
+#         new_data = r.json()['results']
+#         append_data_to_file(file_path = file_path, new_data = json.dumps(new_data))
+#         update_last_page(last_page_num + i)
+#         print("Appended")
     
-    print("Done")
+#     print("Done")
+            
+def get_data_file(file_path: str) -> dict:
+    with open(file_path, encoding = 'utf-8') as f:
+        r = json.loads(f.read())
+        # pprint(r)
+        data = r['results']
+        pprint(data[:5])
+    return data
+
+def combine_data(file_path: str) -> None:
+    s = "./data/daap_data/daap_data_{0}.json"
+    n = 0
+    for i in range(50):
+        new_data = get_data_file(s.format(i + 1))
+        n += len(new_data)
+        print("Total rows so far:", n)
+        append_data_to_file(file_path, new_data)
+        print("appended data")
+    print("records added")
+
+def filter_data(input_file, output_file):
+    with open(input_file) as f:
+        combined_data = json.loads(f.read())
+
+    combined_data = [i for i in combined_data if "games" in i['categories']]
+    print(len(combined_data))
+    with open(output_file, mode = 'w') as f:
+        json.dump(combined_data, f, indent = 4)
+    return
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path', help = 'file path to store the data to')
-    parser.add_argument('--chain', help = 'chain to search')
-    parser.add_argument('--res_page', help = 'results per page')
-    parser.add_argument('--num_pages', help = 'number of pages to request')
+    # parser.add_argument('--chain', help = 'chain to search')
+    # parser.add_argument('--res_page', help = 'results per page')
+    # parser.add_argument('--num_pages', help = 'number of pages to request')
     args = parser.parse_args().__dict__
 
+    args = del_none_keys(args)
+    print(args)
     try:
         file_path = args['file_path']
     except KeyError:
-        raise('Please add a file path')
+        raise ValueError('Please add a file path')
     
-    args = del_none_keys(args)
-    if 'chain' in args:
-        chain = args['chain']
-    else:
-        chain = 'ethereum'
+    # args = del_none_keys(args)
+    # if 'chain' in args:
+    #     chain = args['chain']
+    # else:
+    #     chain = 'ethereum'
     
-    if 'num_pages' in args:
-        number_of_pages = args['num_pages']
-    else:
-        number_of_pages = 1
+    # if 'num_pages' in args:
+    #     number_of_pages = args['num_pages']
+    # else:
+    #     number_of_pages = 1
     
-    if 'res_page' in args:
-        results_per_page = args['res_page']
-    else:
-        results_per_page = 50
+    # if 'res_page' in args:
+    #     results_per_page = args['res_page']
+    # else:
+    #     results_per_page = 50
 
-    store_daaps_data(file_path = file_path, results_per_page = results_per_page, number_of_pages = number_of_pages, chain = chain)
+    # store_daaps_data(file_path = file_path, results_per_page = results_per_page, number_of_pages = number_of_pages, chain = chain)
+    unfiltered_data_file_path = '.'.join(file_path.split('.')[:-1]) + '_input.json'
+    combine_data(unfiltered_data_file_path)
+
+    filter_data(unfiltered_data_file_path, file_path)
+
 
 if __name__ == "__main__":
     main()

@@ -5,6 +5,7 @@ def get_error_message(request: requests.Response):
     if status == 200:
         return None
     elif status == 403:
+        print(status)
         return "Forbidden access"
     elif status == 500:
         return "Internal server error"

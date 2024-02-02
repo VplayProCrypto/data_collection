@@ -4,10 +4,7 @@ from pprint import pprint
 
 eth_url = "https://lb.drpc.org/ogrpc?network=ethereum&dkey=Aj5bpPGTU0Ido-vTc6yCowUjhYCxwK4R7p6yFjlcW9mh"
 
-# eth_provider = Web3.HTTPProvider(eth_url)
-# eth = Web3(eth_provider)
-
-# print(eth.eth.get_block('latest'))
+# eth_provider = Web3.HTTPProtest'))
 
 # headers = {
 #     'content-type': 'application/json'
