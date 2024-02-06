@@ -5,6 +5,7 @@ import argparse
 base_endpoint = "https://api.godsunchained.com/v0/"
 
 def get_total_proto():
+    # type of the card, like a class
     url = base_endpoint + 'proto'
     r = requests.get(url)
     return r.json()['total']
@@ -22,6 +23,7 @@ def get_proto_details_batch(page: int, perPage: int):
     return requests.get(url, params = params).json()
 
 def get_card_details():
+    # individual card, there can be many cards in one proto
     url = base_endpoint + 'card'
 def main():
     parser = argparse.ArgumentParser()
