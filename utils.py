@@ -44,6 +44,6 @@ def append_data_to_file(file_path: str, new_data: any):
             json.dump(new_data, file, indent=4)
 
 # Example usage
-new_data = ['1'] # {"new_key": "new_value"} # Replace with your actual new data
+new_data = {'a':'a'} # {"new_key": "new_value"} # Replace with your actual new data
 file_path = 'your_data_file.json'
 append_data_to_file(file_path, new_data)
