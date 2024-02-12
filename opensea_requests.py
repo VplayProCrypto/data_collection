@@ -70,6 +70,11 @@ class OpenSea:
         print(f"Total pages saved: {i}")
     
     def get_collection(self, collection_slug, output_file_path: str = "./data/opensea_collections.json"):
+        """
+        saves the collection metdata for a single colection
+        :param collection_slug: uniques opensea identifier of the collection to save
+        :param output_file_path: path of the file contiaining the collection metadata
+        """
         assert(isinstance(collection_slug, str) and collection_slug), "Please specify a collection slug"
         url = self.base_url + f'collections/{collection_slug}'
         r = requests.get(url, headers = self.headers).json()
@@ -77,6 +82,11 @@ class OpenSea:
         return r
     
     def save_collections(self, collection_slug_file: str = "./data/opensea_collection_slugs.json", output_file_path: str = "./data/opensea_collections.json", num_req: int = None, perPage: int = 100):
+        """
+        Saves the collection metadata from opnesea in the output file path
+        :param collection_slug_file: a json file containing the list of collection slugs to get the metadata of
+        :param output_file_path: path of the file to save te collectio data to. Should be json.
+        """
         if not os.path.exists(collection_slug_file):
             self.get_collections(num_req = num_req, perPage = perPage, output_file_path = collection_slug_file)
         
@@ -92,6 +102,12 @@ class OpenSea:
         print(f"Saved collection data. Total collections {n}")
     
     def save_nfts_for_collection(self, collection_slug: str, perPage: int = 200, num_req: int = 2):
+        """
+        saves the nfts for the given collection in specified file path
+        :param collection_slug: unique identifier for the collection on opnesea
+        :param perPage: limit of NFTs to retireve per request. Limit parameter in the API. Maximum 200
+        :param num_req: number of pages to retrieve. Only for testing purposes
+        """
         assert(perPage >= 1 and perPage <= 200), "Number of results returned per page should be between 1 and 200"
         url = self.base_url + f'collection/{collection_slug}/nfts'
         i = 0
@@ -122,6 +138,11 @@ class OpenSea:
         print(f"Saved nfts for {collection_slug}. Total {i} pages")
     
     def get_collections_from_contracts(self, contract_file = './data/initial_top_10_games_contracts.txt', output_file = './data/collection_from_contracts.json'):
+        """
+        Saves the collection slugs for the given smart contracts into a json file. Appends into the existing file
+        :param contract_file: the file containing the list of contracts. Must be a text file with one contract address on each line
+        :param output_fie: the path for the file to save the collection slugs
+        """
         with open(contract_file) as f:
             contracts = f.readlines()
         contracts = [c.strip('\n') for c in contracts]
@@ -132,8 +153,7 @@ class OpenSea:
             pprint(url.format(address))
             collection = requests.get(url.format(address), headers = self.headers).json()['collection']
             collections.add(collection)
-        with open(output_file, 'w') as f:
-            json.dump(list(collections), f, indent = 4)
+        append_data_to_file(file_path = output_file, new_data = list(collections))
         print(f"Saved in {output_file}")
 
 def main():
