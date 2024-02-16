@@ -21,3 +21,4 @@ class Alchemy:
             'contract': contract_address
         }
         r = requests.get(url, headers = self.headers, params = params).json()
+        append_data_to_file()
