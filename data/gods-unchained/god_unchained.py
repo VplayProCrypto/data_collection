@@ -1,4 +1,4 @@
-import requests
+import api_requests
 from pprint import pprint
 import argparse
 
@@ -7,12 +7,12 @@ base_endpoint = "https://api.godsunchained.com/v0/"
 def get_total_proto():
     # type of the card, like a class
     url = base_endpoint + 'proto'
-    r = requests.get(url)
+    r = api_requests.get(url)
     return r.json()['total']
 
 def get_proto_details(id: int):
     url = base_endpoint + 'proto/{id}'
-    return requests.get(url).json()
+    return api_requests.get(url).json()
 
 def get_proto_details_batch(page: int, perPage: int):
     url = base_endpoint + 'proto'
@@ -20,7 +20,7 @@ def get_proto_details_batch(page: int, perPage: int):
         'page': page,
         'perPage': perPage
     }
-    return requests.get(url, params = params).json()
+    return api_requests.get(url, params = params).json()
 
 def get_card_details():
     # individual card, there can be many cards in one proto

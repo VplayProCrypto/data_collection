@@ -1,8 +1,8 @@
 import json
 import os
-import requests
+import api_requests
 
-def get_error_message(request: requests.Response):
+def get_error_message(request: api_requests.Response):
     status = request.status_code
     if status == 200:
         return None

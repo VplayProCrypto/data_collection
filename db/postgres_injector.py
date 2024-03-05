@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 #         self.engine = create_engine()
 
 # import psycopg2
-from opensea_requests_sql import OpenSea
+from api_requests.api_requests import OpenSea
 
 class Injector:
     def __init__(self, username: str = None, password: str = None, port: str = None, database: str = None, host: str = None):
