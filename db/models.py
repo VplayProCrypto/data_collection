@@ -28,6 +28,7 @@ class Collection(Base):
     telegram_url: Mapped[Optional[str]]
     twitter_url: Mapped[Optional[str]]
     instagram_url: Mapped[Optional[str]]
+    updated_at: Mapped[datetime] = mapped_column(default = datetime.now)
     fees: Mapped[List["Fee"]] = relationship(
         back_populates="collection_slug", cascade="all, delete-orphan"
     )
@@ -92,7 +93,7 @@ class Nft(Base):
     image_url: Mapped[str]
     metadata_url: Mapped[str]
     opensea_url: Mapped[str]
-    updated_at: Mapped[datetime]
+    updated_at: Mapped[datetime] = mapped_column(default = datetime.now)
     traits = mapped_column(JSONB)
     is_nsfw: Mapped[bool]
     is_disabled: Mapped[bool]

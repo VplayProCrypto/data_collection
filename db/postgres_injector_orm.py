@@ -22,7 +22,30 @@ class Injector:
         
         self.engine = create_engine(self.url)
     
-    def map_opensea
+    def map_opensea_collection(self, collection_data: dict):
+        return {
+            'opensea_slug': collection_data['collection'],
+            'name': collection_data['name'],
+            'description': collection_data['description'],
+            'owner': collection_data['owner'],
+            'category': collection_data['category'],
+            'is_nsfw': collection_data['is_nsfw'],
+            'opensea_url': collection_data['opensea_url'],
+            'project_url': collection_data['project_url'],
+            'wiki_url': collection_data['wiki_url'],
+            'discord_url': collection_data['discord_url'],
+            'telegram_url': collection_data['telegram_url'],
+            'twitter_url': collection_data['twitter_username'],
+            'instagram_url': collection_data['instagram_username'],
+            'updated_at': collection_data['updated_at'],
+        }
+    
+    def raw_sql(self, file_path: str):
+        with Session(self.engine) as session:
+            with open(file_path, mode = 'r') as f:
+                r = f.read()
+            session.execute(text(r))
+            session.commit()
     
     def _remove_duplicates(self, new_data, index_columns):
         unique_combinations = set()
@@ -75,4 +98,12 @@ class Injector:
                 session.rollback()  # Ensure the session is rolled back on any error
                 print("SQLAlchemy error occurred: ", e)
                 raise e
-    
+
+def main():
+    injector = Injector(username='tsdbadmin', password='m9u74pu73bg9fdxi', host='v4ob0qdj5t.y1jft9lh0x.tsdb.cloud.timescale.com', port='35641', database='tsdb')
+    # injector.raw_sql('./raw_sql/tables.sql')
+    # injector.raw_sql('./raw_sql/hypertables.sql')
+    injector.raw_sql('./raw_sql/indexes.sql')
+
+if __name__ == "__main__":
+    main()
