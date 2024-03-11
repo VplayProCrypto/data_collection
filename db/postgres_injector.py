@@ -6,16 +6,17 @@ from sqlalchemy import create_engine, text
 #         self.engine = create_engine()
 
 # import psycopg2
-from api_requests.api_requests import OpenSea
+from api_requests import OpenSea
 
 class Injector:
     def __init__(self, username: str = None, password: str = None, port: str = None, database: str = None, host: str = None):
-        self.username = 'postgres'
-        self.port = '5432'
-        self.database = 'local'
-        self.password = 'postgres'
+        self.username = 'tsdbadmin'
+        self.port = '36429'
+        self.database = 'tsdb'
+        self.password = 'aezef0ugdk5hu4a8'
+        self.host = 'atedt3o7e4.rmlbm9je29.tsdb.cloud.timescale.com'
         if not username:
-            self.url = f'postgresql+psycopg2://{self.username}:{self.password}@localhost:{self.port}/{self.database}'
+            self.url = f'postgresql+psycopg2://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
         else:
             self.url = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
         

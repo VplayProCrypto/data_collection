@@ -101,7 +101,7 @@ class OpenSea:
     #     print(f"Saved collection data. Total collections {n}")
     #     return collections
     
-    def save_nfts_for_collection(self, collection_slug: str, perPage: int = 200, num_req: int = 2, next_page: str = None):
+    def get_nfts_for_collection(self, collection_slug: str, num_pages: int, perPage: int = 200, next_page: str = None):
         """
         saves the nfts for the given collection in specified file path
         :param collection_slug: unique identifier for the collection on opnesea
@@ -112,34 +112,40 @@ class OpenSea:
         assert(perPage >= 1 and perPage <= 200), "Number of results returned per page should be between 1 and 200"
         url = self.base_url + f'collection/{collection_slug}/nfts'
         i = 0
-        next_page_file = f'../next_page/{collection_slug}'
+        nfts = []
+        next_pages = []
         params = {}
-        try:
-            with open(next_page_file, 'r') as f:
-                params['next'] = f.readlines()[-1]
-        except:
-            pass
         params['limit'] = perPage
         # time.sleep(0.1)
-        r = requests.get(url, params = params, headers = self.headers).json()
-        # pprint(r)
-        nfts = []
-        nfts.extend(r['nfts'])
-        params['next'] = r['next']
-        self._save_next_page(next_page_file, params['next'])
+        if next_page:
+            params['next'] = next_page
+        r: dict = requests.get(url, params = params, headers = self.headers).json()
+        if r.get('nft'):
+            nfts.extend(r.get('nft'))
+        if r.get('next'):
+            params['next'] = r['next']
+            next_pages.append(r.get('next'))
+        else:
+            return {
+                'nfts': nfts,
+                'next_pages': next_pages
+            }
         i += 1
         while params['next']:
             # time.sleep(0.1)
-            r = requests.get(url, headers = self.headers).json()
+            r = requests.get(url, params = params, headers = self.headers).json()
             nfts.extend(r['nfts'])
             params['next'] = r['next']
-            self._save_next_page(next_page_file, params['next'])
+            next_pages.append(params['next'])
             i += 1
-            if i == num_req:
+            if i >= num_pages:
                 break
             print(f"At page {i}")
         print(f"Retrieved nfts for {collection_slug}. Total {i} pages")
-        return nfts
+        return {
+            'nfts': nfts,
+            'next_pages': next_pages
+        }
         
     
     def get_collections_from_contracts(self, contract_file = '../data/initial_top_10_games_contracts.txt'):
@@ -162,54 +168,89 @@ class OpenSea:
         print(f"collections requested")
         return list(collections)
     
-    # def get_events_by_collection(self, collection_slug: str, perPage: int, timeframe: int = 30, ):
-    #     url = self.base_url + f'events/collection/{collection_slug}'
-        
-    def _extract_offer_from_listing(self, listing):
-        assert(isinstance(listing, dict))
-        price_info = listing['price']['current']
-        p = listing['protocol_data']['parameters']
-        if len(p['offer']) > 1 or p['offer'][0]['item_tye'] in [1, 4, 5]:
-            return None
+    def _filter_event(self, event: dict, collection_slug: str):
+        if event['event_type'] == 'order':
+            return event['asset']['collection'] == collection_slug
         else:
-            item_info = {}
-            item_info['offerer'] = p['offerer']
-            item_info['contract'] = p['token']
-            item_info['token_id'] = p['identifierOrCriteria']
-            item_info['price'] = price_info['value'] / 10**price_info['decimals']
-            item_info['currency'] = price_info['currency']
-            return item_info
+            return event['nft']['collection'] == collection_slug
     
-    def get_events_for_collection(self, collection_slug: str, after_date: datetime):
-        url = self.base_url + f'listings/collection/{collection_slug}/all'
-        next_page_file = f'../next_page/{collection_slug}/listings.txt'
-        if page == 0:
-            r = requests.get(url, headers = self.headers).json()
+    def get_events_by_collection(self, collection_slug: str, after_date: datetime, event_type: str = None, max_recs: int = 1000):
+        url = self.base_url + f'events/collection/{collection_slug}'
+        i = 0
+        params = {}
+        events = []
+        params['after'] = after_date.timestamp()
+        if event_type:
+            params['event_type'] = [event_type]
         else:
-            try:
-                with open(next_page_file, 'r') as f:
-                    next_page = f.readlines()[page - 1]
-            except:
-                pass
-            params = {
-                'next': next_page
-            }
-            r = requests.get(url, headers = self.headers, params = params)
-        listings = r['listings']
-        next_page = r['next']
-        self._save_next_page(next_page_file, next_page)
-        nft_listings = [self._extract_offer_from_listing(l) for l in listings]
-        nft_listings = [i for i in nft_listings if i is not None]
-        while(next_page):
-            # time.sleep(0.1)
-            r = requests.get(url, headers = self.headers, params = params)
-            listings = r['listings']
-            next_page = r['next']
-            self._save_next_page(next_page_file, next_page)
-            nft_listings.extend([self._extract_offer_from_listing(l) for l in listings])
-            nft_listings = [i for i in nft_listings if i is not None]
+            params['event_type'] = ['sale', 'listing', 'transfer']
+        t = time.time()
+        r = requests.get(url, params = params, headers = self.headers).json()
+        e = r.get('asset_events')
+        if e:
+            events.extend(e)
+        else:
+            return []
+        params['next'] = r.get('next')
+        i += 1
+        print(f'retieived page {i}')
+        while params['next'] and len(events) < max_recs:
+            r = requests.get(url, headers = self.headers, params = params).json()
+            e = r.get('asset_events')
+            if e:
+                events.extend(e)
+            else:
+                break
+            params['next'] = r.get('next')
+            i += 1
+            print(f'retieived page {i}')
         
-        return nft_listings
+        print(f'Total events retrieved: {len(events)} in time: {time.time() - t}')
+        return [i for i in events if self._filter_event(i, collection_slug)]
+    # def _extract_offer_from_listing(self, listing):
+    #     assert(isinstance(listing, dict))
+    #     price_info = listing['price']['current']
+    #     p = listing['protocol_data']['parameters']
+    #     if len(p['offer']) > 1 or p['offer'][0]['item_tye'] in [1, 4, 5]:
+    #         return None
+    #     else:
+    #         item_info = {}
+    #         item_info['offerer'] = p['offerer']
+    #         item_info['contract'] = p['token']
+    #         item_info['token_id'] = p['identifierOrCriteria']
+    #         item_info['price'] = price_info['value'] / 10**price_info['decimals']
+    #         item_info['currency'] = price_info['currency']
+    #         return item_info
+    
+    # def get_events_for_collection(self, collection_slug: str, after_date: datetime):
+    #     url = self.base_url + f'listings/collection/{collection_slug}/all'
+    #     if page == 0:
+    #         r = requests.get(url, headers = self.headers).json()
+    #     else:
+    #         try:
+    #             with open(next_page_file, 'r') as f:
+    #                 next_page = f.readlines()[page - 1]
+    #         except:
+    #             pass
+    #         params = {
+    #             'next': next_page
+    #         }
+    #         r = requests.get(url, headers = self.headers, params = params)
+    #     listings = r['listings']
+    #     next_page = r['next']
+    #     self._save_next_page(next_page_file, next_page)
+    #     nft_listings = [self._extract_offer_from_listing(l) for l in listings]
+    #     nft_listings = [i for i in nft_listings if i is not None]
+    #     while(next_page):
+    #         # time.sleep(0.1)
+    #         r = requests.get(url, headers = self.headers, params = params)
+    #         listings = r['listings']
+    #         next_page = r['next']
+    #         self._save_next_page(next_page_file, next_page)
+    #         nft_listings.extend([self._extract_offer_from_listing(l) for l in listings])
+    #         nft_listings = [i for i in nft_listings if i is not None]
+        
+    #     return nft_listings
     
     def get_events_by_nft(self, token_id: str, contract_address: str, timeframe: int = 90, event_type: list = ["sale"]):
         assert(not token_id == "" and not contract_address == ""), "Please provide token_id or contract addresses"
@@ -239,9 +280,10 @@ def main():
     consumer = OpenSea(args['chain'])
     # consumer.save_collections(perPage = args['limit_c'], num_req = int(args['test_n']))
     # consumer.get_collection('the-sandbox-assets')
-    print(consumer.get_collections_from_contracts())
+    # print(consumer.get_collections_from_contracts())
     # consumer.save_collections()
-    consumer.save_nfts_for_collection(perPage=args['limit_n'], collection_slug='cryptokitties')
+    # pprint(consumer.get_nfts_for_collection(collection_slug='the-sandbox-assets', num_pages=10)['nfts'][30:35])
+    pprint(consumer.get_events_by_collection(collection_slug='the-sandbox-assets', after_date = datetime(2024, 1, 1, 0, 0, 0))[30:35])
 
 if __name__ == "__main__":
     main()
