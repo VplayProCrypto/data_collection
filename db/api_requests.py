@@ -18,54 +18,54 @@ class OpenSea:
         }
         self.chain = chain
     
-    def _save_next_page(self, file_path: str, next_page_link: str):
-        """ utility to save the next page link from previous response. To start from the new page every time. Reduces number of requests made.
-        :param file_path: path of the file to save the next page link
-        :param next_page_link: link to te next page
-        """
+    # def _save_next_page(self, file_path: str, next_page_link: str):
+    #     """ utility to save the next page link from previous response. To start from the new page every time. Reduces number of requests made.
+    #     :param file_path: path of the file to save the next page link
+    #     :param next_page_link: link to te next page
+    #     """
 
-        with open(file_path, 'a') as f:
-            f.write(next_page_link)
-            f.write('\n')
+    #     with open(file_path, 'a') as f:
+    #         f.write(next_page_link)
+    #         f.write('\n')
     
-    def get_collections(self, num_req: int = None, perPage: int = 100) -> None:
-        """ Saves the collection slugs as a list in a json file
-        :param num_req: restricts the number of requests made, For testing purposes only.
-        :param perPage: number of collections to retrive per request. Default = 100
-        """
-        assert(perPage >= 1 and perPage <= 100), "Number of results per page must be between 1 and 100"
-        i = 0
-        next_page_file = '../next_page/collections.txt'
-        url = self.base_url + 'collections'
-        params = {}
-        if self.chain:
-            params['chain'] = self.chain
-        params['limit'] = perPage
-        try:
-            with open(next_page_file) as f:
-                params['next'] = f.readlines()[-1]
-                print(params['next'])
-                print(params['next'])
-                print(params['next'])
-                print(params['next'])
-                print(params['next'])
-        except:
-            pass
-        r = requests.get(url, headers = self.headers, params = params).json()
-        collection_slugs = [collection['collection'] for collection in r['collections']]
-        params['next'] = r['next']
-        # print(params['next'])
-        self._save_next_page(next_page_file, params['next'])
-        i += 1
-        while params['next'] and i is not num_req:
-            # time.sleep(0.1)
-            r = requests.get(url, headers = self.headers, params = params).json()
-            self._save_next_page(next_page_file, params['next'])
-            params = r['next']
-            i += 1
-            print(f"At page {i}")
+    # def get_collections(self, num_req: int = None, perPage: int = 100) -> None:
+    #     """ Saves the collection slugs as a list in a json file
+    #     :param num_req: restricts the number of requests made, For testing purposes only.
+    #     :param perPage: number of collections to retrive per request. Default = 100
+    #     """
+    #     assert(perPage >= 1 and perPage <= 100), "Number of results per page must be between 1 and 100"
+    #     i = 0
+    #     next_page_file = '../next_page/collections.txt'
+    #     url = self.base_url + 'collections'
+    #     params = {}
+    #     if self.chain:
+    #         params['chain'] = self.chain
+    #     params['limit'] = perPage
+    #     try:
+    #         with open(next_page_file) as f:
+    #             params['next'] = f.readlines()[-1]
+    #             print(params['next'])
+    #             print(params['next'])
+    #             print(params['next'])
+    #             print(params['next'])
+    #             print(params['next'])
+    #     except:
+    #         pass
+    #     r = requests.get(url, headers = self.headers, params = params).json()
+    #     collection_slugs = [collection['collection'] for collection in r['collections']]
+    #     params['next'] = r['next']
+    #     # print(params['next'])
+    #     self._save_next_page(next_page_file, params['next'])
+    #     i += 1
+    #     while params['next'] and i is not num_req:
+    #         # time.sleep(0.1)
+    #         r = requests.get(url, headers = self.headers, params = params).json()
+    #         self._save_next_page(next_page_file, params['next'])
+    #         params = r['next']
+    #         i += 1
+    #         print(f"At page {i}")
         
-        print(f"Total pages: {i}")
+    #     print(f"Total pages: {i}")
     
     def get_collection(self, collection_slug):
         """
@@ -79,27 +79,27 @@ class OpenSea:
         # time.sleep(0.1)
         return r
     
-    def save_collections(self, num_req: int = None, perPage: int = 100):
-        """
-        Saves the collection metadata from opnesea in the output file path
-        :param collection_slug_file: a json file containing the list of collection slugs to get the metadata of
-        :param output_file_path: path of the file to save te collectio data to. Should be json.
-        """
-        # if not os.path.exists(collection_slug_file):
-        #     self.get_collections(num_req = num_req, perPage = perPage, output_file_path = collection_slug_file)
+    # def save_collections(self, num_req: int = None, perPage: int = 100):
+    #     """
+    #     Saves the collection metadata from opnesea in the output file path
+    #     :param collection_slug_file: a json file containing the list of collection slugs to get the metadata of
+    #     :param output_file_path: path of the file to save te collectio data to. Should be json.
+    #     """
+    #     # if not os.path.exists(collection_slug_file):
+    #     #     self.get_collections(num_req = num_req, perPage = perPage, output_file_path = collection_slug_file)
         
-        # with open(collection_slug_file, 'r') as f:
-        #     slugs = json.loads(f.read())
-        slugs = self.get_collections_from_contracts()
-        n = len(slugs)
-        collections = []
-        for i in range(n):
-            if i is num_req:
-                break
-            collections.append(self.get_collection(slugs[i]))
-            print(f"Saved collection {i}: {slugs[i]}")
-        print(f"Saved collection data. Total collections {n}")
-        return collections
+    #     # with open(collection_slug_file, 'r') as f:
+    #     #     slugs = json.loads(f.read())
+    #     slugs = self.get_collections_from_contracts()
+    #     n = len(slugs)
+    #     collections = []
+    #     for i in range(n):
+    #         if i is num_req:
+    #             break
+    #         collections.append(self.get_collection(slugs[i]))
+    #         print(f"Saved collection {i}: {slugs[i]}")
+    #     print(f"Saved collection data. Total collections {n}")
+    #     return collections
     
     def save_nfts_for_collection(self, collection_slug: str, perPage: int = 200, num_req: int = 2, next_page: str = None):
         """
@@ -180,7 +180,7 @@ class OpenSea:
             item_info['currency'] = price_info['currency']
             return item_info
     
-    def get_nft_listings_by_collection(self, collection_slug: str, perPage: int, page: int = 0):
+    def get_events_for_collection(self, collection_slug: str, after_date: datetime):
         url = self.base_url + f'listings/collection/{collection_slug}/all'
         next_page_file = f'../next_page/{collection_slug}/listings.txt'
         if page == 0:
