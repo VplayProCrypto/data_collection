@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.collection
     description character varying not null,
     owner character varying not null,
     category character varying not null,
-    is_nsfw boolean not null,
+    is_nsfw boolean not null default false,
     opensea_url character varying,
     project_url character varying,
     wiki_url character varying,
@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.collection
     telegram_url character varying,
     twitter_url character varying,
     instagram_url character varying,
+    created_date timestamp with time zone not null default now(),
     updated_at timestamp with time zone not null default now(),
     CONSTRAINT collection_pkey primary key (opensea_slug)
 );
@@ -39,6 +40,13 @@ CREATE TABLE IF NOT EXISTS public.collection_dynamic
     floor_price double precision,
     floor_price_currency character varying,
     average_price double precision,
+    uaw bigint,
+    total_wallets bigint,
+    twitter_sentiment double precision,
+    facebook_sentiment double precision,
+    instagram_sentiment double precision,
+    reddit_sentiment double precision,
+    discord_sentiment double precision,
     event_timestamp timestamp with time zone not null,
     CONSTRAINT collection_dynamic_pkey primary key (collection_slug, event_timestamp),
     CONSTRAINT collection_dynamic_collection_slug_fkey FOREIGN KEY (collection_slug)
@@ -56,7 +64,7 @@ CREATE TABLE IF NOT EXISTS public.contract
     collection_slug character varying not null,
     contract_address character varying not null,
     chain character varying not null,
-    CONSTRAINT contract_pkey primary key (contract_address),
+    CONSTRAINT contract_pkey primary key (contract_address, chain),
     CONSTRAINT contract_collection_slug_fkey FOREIGN KEY (collection_slug)
         REFERENCES public.collection (opensea_slug) match simple
         ON UPDATE NO ACTION
@@ -90,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.fee
     collection_slug character varying not null,
     fee double precision not null,
     recipient character varying not null,
-    CONSTRAINT fee_pkey primary key (collection_slug),
+    CONSTRAINT fee_pkey primary key (collection_slug, recipient),
     CONSTRAINT fee_collection_slug_fkey FOREIGN KEY (collection_slug)
         REFERENCES public.collection (opensea_slug) match simple
         ON UPDATE NO ACTION
@@ -185,7 +193,7 @@ CREATE TABLE IF NOT EXISTS public.nft_events
     price_decimals character varying,
     start_date timestamp with time zone,
     expiration_date timestamp with time zone,
-    event_timestamp timestamp with time zone not null, --not null,
+    event_timestamp timestamp with time zone not null,
     CONSTRAINT nft_listing_pkey primary key (contract_address, token_id, event_timestamp)
 );
 
@@ -220,7 +228,7 @@ CREATE TABLE IF NOT EXISTS public.nft_ownership
     sell_time timestamp with time zone not null,
     collection_slug character varying not null,
     CONSTRAINT nft_ownership_pkey primary key (contract_address, token_id, buy_time)
-)
+);
 
 create table if not exists public.nft_dynamic
 (
@@ -230,4 +238,4 @@ create table if not exists public.nft_dynamic
     rr numeric,
     event_timestamp timestamp with time zone not null default now(),
     constraint nft_dynamic_pk primary key (contract_address, token_id, event_timestamp)
-)
+);

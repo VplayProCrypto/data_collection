@@ -28,21 +28,22 @@ class Collection(Base):
     telegram_url: Mapped[Optional[str]]
     twitter_url: Mapped[Optional[str]]
     instagram_url: Mapped[Optional[str]]
+    created_date: Mapped[datetime]
     updated_at: Mapped[datetime] = mapped_column(default = datetime.now)
     fees: Mapped[List["Fee"]] = relationship(
-        back_populates="collection_slug", cascade="all, delete-orphan"
+        back_populates="collection", cascade="all, delete-orphan"
     )
     contracts: Mapped[List["Contract"]] = relationship(
-        back_populates="collection_slug", cascade="all, delete-orphan"
+        back_populates="collection", cascade="all, delete-orphan"
     )
     tokens: Mapped[List["PaymentTokens"]] = relationship(
-        back_populates = "collection_slug", cascade = "all, delete-orphan"
+        back_populates = "collection", cascade = "all, delete-orphan"
     )
     nfts: Mapped[List["Nft"]] = relationship(
-        back_populates="opensea_slug", cascade="all, delete-orphan"
+        back_populates="collection", cascade="all, delete-orphan"
     )
     def __repr__(self) -> str:
-        return f"Collection(id={self.id!r}, name={self.name!r}, slug={self.opensea_slug!r})"
+        return f"Collection(id={self.opensea_slug!r}, name={self.name!r}, slug={self.opensea_slug!r})"
 
 class CollectionDynamic(Base):
     __tablename__ = "collection_dynamic"
@@ -58,6 +59,13 @@ class CollectionDynamic(Base):
     floor_price: Mapped[float] = mapped_column(nullable=True)
     floor_price_currency: Mapped[str] = mapped_column(nullable=True)
     average_price: Mapped[float] = mapped_column(nullable=True)
+    uaw: Mapped[Optional[int]]
+    total_wallets: Mapped[Optional[int]]
+    facebook_sentiment: Mapped[Optional[float]]
+    twitter_sentiment: Mapped[Optional[float]]
+    instagram_sentiment: Mapped[Optional[float]]
+    reddit_sentiment: Mapped[Optional[float]]
+    discord_sentiment: Mapped[Optional[float]]
     event_timestamp: Mapped[datetime] = mapped_column(primary_key=True)
 
 class PaymentTokens(Base):
@@ -67,104 +75,107 @@ class PaymentTokens(Base):
     chain: Mapped[str] = mapped_column(default = "ethereum", primary_key = True)
     symbol: Mapped[str] = mapped_column(nullable=True)
     decimals: Mapped[int]
+    collection: Mapped["Collection"] = relationship(
+        back_populates="tokens"
+    )
 
 class Contract(Base):
     __tablename__ = "contract"
     collection_slug: Mapped[str] = mapped_column(ForeignKey("collection.opensea_slug"))
     contract_address: Mapped[str] = mapped_column(primary_key = True)
-    chain: Mapped[str] = mapped_column(default = "ehtereum")
+    chain: Mapped[str] = mapped_column(default = "ehtereum", primary_key = True)
+    collection: Mapped["Collection"] = relationship(
+        back_populates="contracts"
+    )
     def __repr__(self) -> str:
-        return f"Contract(collection={self.collection_id!r}, contract_address={self.contract_address!r}, chain={self.chain!r})"
+        return f"Contract(collection={self.collection_slug!r}, contract_address={self.contract_address!r}, chain={self.chain!r})"
 
 class Fee(Base):
     __tablename__ = "fee"
     collection_slug: Mapped[str] = mapped_column(ForeignKey("collection.opensea_slug"), primary_key = True)
     fee: Mapped[float]
     recipient: Mapped[str]
+    collection: Mapped["Collection"] = relationship(
+        back_populates="fees"
+    )
 
 class Nft(Base):
     __tablename__ = "nft"
-    opensea_slug: Mapped[str] = mapped_column(ForeignKey("collection.opensea_slug"))
+    collection_slug: Mapped[str] = mapped_column(ForeignKey("collection.opensea_slug"))
     token_id: Mapped[str] = mapped_column(primary_key=True)
     contract_address: Mapped[str] = mapped_column(primary_key=True)
     token_standard: Mapped[str]
     name: Mapped[str]
-    descp: Mapped[str]
+    description: Mapped[str]
     image_url: Mapped[str]
     metadata_url: Mapped[str]
     opensea_url: Mapped[str]
     updated_at: Mapped[datetime] = mapped_column(default = datetime.now)
-    traits = mapped_column(JSONB)
+    traits = mapped_column(JSONB, nullable = True)
     is_nsfw: Mapped[bool]
     is_disabled: Mapped[bool]
-    sales: Mapped[List["NftSale"]] = relationship(
-        back_populates = "nft"
+    # events: Mapped[List["NftEvent"]] = relationship(
+    #     back_populates = "nft"
+    # )
+    collection: Mapped["Collection"] = relationship(
+        back_populates="nfts"
     )
-    transfers: Mapped[List["NftTransfer"]] = relationship(
-        back_populates = "nft"
-    )
-    listings: Mapped[List["NftListing"]] = relationship(
-        back_populates = "nft"
-    )
+    # transfers: Mapped[List["NftTransfer"]] = relationship(
+    #     back_populates = "nft"
+    # )
+    # listings: Mapped[List["NftListing"]] = relationship(
+    #     back_populates = "nft"
+    # )
     
     def __repr__(self) -> str:
         return f"Nft(id={self.id!r}, email_address={self.chain!r})"
 
-class NftSale(Base):
-    __tablename__ = "nft_sale"
-    transaction_hash: Mapped[str] = mapped_column(primary_key = True)
-    token_id: Mapped[str]
-    contract_address: Mapped[str]
-    buyer: Mapped[str]
-    seller: Mapped[str]
+class NftEvent(Base):
+    __tablename__ = "nft_events"
+    transaction_hash: Mapped[str]
+    event_type: Mapped[Optional[str]]
+    token_id: Mapped[str] = mapped_column(primary_key = True)
+    contract_address: Mapped[str] = mapped_column(primary_key = True)
     collection_slug: Mapped[str]
+    seller: Mapped[str]
+    buyer: Mapped[str]
     price_val: Mapped[str]
     price_currnecy: Mapped[str]
-    price_symbol: Mapped[str]
-    event_timestamp: Mapped[str] = mapped_column(default = datetime.now)
-    nft: Mapped["Nft"] = relationship(
-        back_populates = "sales"
-    )
-
-class NftTransfer(Base):
-    __tablename__ = "nft_transfer"
-    transaction_hash: Mapped[str] = mapped_column(primary_key = True)
-    token_id: Mapped[str]
-    contract_address: Mapped[str]
-    buyer: Mapped[str]
-    seller: Mapped[str]
-    collection_slug: Mapped[str]
-    event_timestamp: Mapped[str] = mapped_column(default = datetime.now)
-    nft: Mapped["Nft"] = relationship(
-        back_populates = "transfers"
-    )
-
-class NftListing(Base):
-    __tablename__ = "nft_listing"
-    transaction_hash: Mapped[str] = mapped_column(primary_key = True)
-    token_id: Mapped[str]
-    contract_address: Mapped[str]
-    seller: Mapped[str]
-    collection_slug: Mapped[str]
-    price_val: Mapped[str]
-    price_currnecy: Mapped[str]
-    price_symbol: Mapped[str]
-    start_date: Mapped[datetime]
+    price_decimals: Mapped[int]
+    start_date: Mapped[Optional[datetime]]
     expiration_date: Mapped[Optional[datetime]]
-    event_timestamp: Mapped[str] = mapped_column(default = datetime.now)
-    nft: Mapped["Nft"] = relationship(
-        back_populates = "listings"
-    )
+    event_timestamp: Mapped[str] = mapped_column(default = datetime.now, primary_key = True)
+    # nft: Mapped["Nft"] = relationship(
+    #     back_populates = "events"
+    # )
+
+# class NftListing(Base):
+#     __tablename__ = "nft_listing"
+#     transaction_hash: Mapped[str] = mapped_column(primary_key = True)
+#     token_id: Mapped[str]
+#     contract_address: Mapped[str]
+#     seller: Mapped[str]
+#     collection_slug: Mapped[str]
+#     price_val: Mapped[str]
+#     price_currnecy: Mapped[str]
+#     price_symbol: Mapped[str]
+#     start_date: Mapped[datetime]
+#     expiration_date: Mapped[Optional[datetime]]
+#     event_timestamp: Mapped[str] = mapped_column(default = datetime.now)
+#     nft: Mapped["Nft"] = relationship(
+#         back_populates = "listings"
+#     )
 
 class NftOwnership(Base):
     __tablename__ = "nft_ownership"
     buyer: Mapped[str]
     seller: Mapped[str]
-    token_id: Mapped[str]
-    contract_address: Mapped[str]
-    transaction_hash: Mapped[str] = mapped_column(primary_key = True)
-    buy_time: Mapped[datetime]
+    token_id: Mapped[str] = mapped_column(primary_key = True)
+    contract_address: Mapped[str] = mapped_column(primary_key = True)
+    transaction_hash: Mapped[str]
+    buy_time: Mapped[datetime] = mapped_column(primary_key = True)
     sell_time: Mapped[datetime]
+    collection_slug: Mapped[str]
 
 class Erc20Transfer(Base):
     __tablename__ = "erc20_transfers"
@@ -175,6 +186,8 @@ class Erc20Transfer(Base):
     symbol: Mapped[str]
     decimals: Mapped[int]
     transaction_hash: Mapped[str] = mapped_column(primary_key = True)
+    event_timestamp: Mapped[datetime]
+    collection_slug: Mapped[Optional[str]]
 
 class TokenPrice(Base):
     __tablename__ = "token_price"
@@ -184,6 +197,14 @@ class TokenPrice(Base):
     usdt_conversion_price: Mapped[Optional[float]]
     eth_conversion_price: Mapped[Optional[float]]
     event_timestamp: Mapped[datetime] = mapped_column(primary_key=True)
+
+class NftDynamic:
+    __tablename__ = "nft_dynamic"
+    token_id: Mapped[str] = mapped_column(primary_key = True)
+    contract_address: Mapped[str] = mapped_column(primary_key = True)
+    collection_slug: Mapped[str]
+    rr: Mapped[Optional[float]]
+    event_timestamp: Mapped[datetime]
 
 def get_metadata():
     return Base.metadata

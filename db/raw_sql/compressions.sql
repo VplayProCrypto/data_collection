@@ -1,1 +1,1 @@
-alter table nft
+alter table nft 

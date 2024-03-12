@@ -67,7 +67,7 @@ class OpenSea:
         
     #     print(f"Total pages: {i}")
     
-    def get_collection(self, collection_slug):
+    def get_collection(self, collection_slug) -> dict:
         """
         saves the collection metdata for a single colection
         :param collection_slug: uniques opensea identifier of the collection to save
@@ -101,7 +101,7 @@ class OpenSea:
     #     print(f"Saved collection data. Total collections {n}")
     #     return collections
     
-    def get_nfts_for_collection(self, collection_slug: str, num_pages: int, perPage: int = 200, next_page: str = None):
+    def get_nfts_for_collection(self, collection_slug: str, num_pages: int, perPage: int = 200, next_page: str = None) -> dict:
         """
         saves the nfts for the given collection in specified file path
         :param collection_slug: unique identifier for the collection on opnesea
@@ -120,8 +120,8 @@ class OpenSea:
         if next_page:
             params['next'] = next_page
         r: dict = requests.get(url, params = params, headers = self.headers).json()
-        if r.get('nft'):
-            nfts.extend(r.get('nft'))
+        if r.get('nfts'):
+            nfts.extend(r.get('nfts'))
         if r.get('next'):
             params['next'] = r['next']
             next_pages.append(r.get('next'))
@@ -133,14 +133,14 @@ class OpenSea:
         i += 1
         while params['next']:
             # time.sleep(0.1)
-            r = requests.get(url, params = params, headers = self.headers).json()
+            r: dict = requests.get(url, params = params, headers = self.headers).json()
             nfts.extend(r['nfts'])
-            params['next'] = r['next']
+            params['next'] = r.get('next')
             next_pages.append(params['next'])
             i += 1
+            print(f"At page {i}")
             if i >= num_pages:
                 break
-            print(f"At page {i}")
         print(f"Retrieved nfts for {collection_slug}. Total {i} pages")
         return {
             'nfts': nfts,
@@ -174,18 +174,19 @@ class OpenSea:
         else:
             return event['nft']['collection'] == collection_slug
     
-    def get_events_by_collection(self, collection_slug: str, after_date: datetime, event_type: str = None, max_recs: int = 1000):
+    def get_events_for_collection(self, collection_slug: str, after_date: datetime, event_type: str = None, max_recs: int = 1000) -> list:
         url = self.base_url + f'events/collection/{collection_slug}'
         i = 0
         params = {}
         events = []
-        params['after'] = after_date.timestamp()
+        params['after'] = int(after_date.timestamp())
         if event_type:
             params['event_type'] = [event_type]
         else:
             params['event_type'] = ['sale', 'listing', 'transfer']
         t = time.time()
         r = requests.get(url, params = params, headers = self.headers).json()
+        # pprint(r)
         e = r.get('asset_events')
         if e:
             events.extend(e)
@@ -207,6 +208,7 @@ class OpenSea:
         
         print(f'Total events retrieved: {len(events)} in time: {time.time() - t}')
         return [i for i in events if self._filter_event(i, collection_slug)]
+    
     # def _extract_offer_from_listing(self, listing):
     #     assert(isinstance(listing, dict))
     #     price_info = listing['price']['current']
@@ -252,22 +254,57 @@ class OpenSea:
         
     #     return nft_listings
     
-    def get_events_by_nft(self, token_id: str, contract_address: str, timeframe: int = 90, event_type: list = ["sale"]):
-        assert(not token_id == "" and not contract_address == ""), "Please provide token_id or contract addresses"
-        url = self.base_url + f'events/chain/{self.chain}/contract/{contract_address}/nfts/{token_id}'
-        after_time_stamp = time.mktime((date.today() - timedelta(days = timeframe)).timetuple())
-        params = {
-            'after': after_time_stamp,
-            'event_type': event_type
+    # def get_events_by_nft(self, token_id: str, contract_address: str, timeframe: int = 90, event_type: list = ["sale"]):
+    #     assert(not token_id == "" and not contract_address == ""), "Please provide token_id or contract addresses"
+    #     url = self.base_url + f'events/chain/{self.chain}/contract/{contract_address}/nfts/{token_id}'
+    #     after_time_stamp = time.mktime((date.today() - timedelta(days = timeframe)).timetuple())
+    #     params = {
+    #         'after': after_time_stamp,
+    #         'event_type': event_type
+    #     }
+    #     events = []
+    #     while True:
+    #         # time.sleep(0.1)
+    #         r = requests.get(url, headers = self.headers, params = params).json()
+    #         events.extend(r['asset_events'])
+    #         if not r['next']:
+    #             break
+
+class EtherScan:
+    def __init__(self, api_key: str = None):
+
+        self.api_key = 'WZISBUWNRXARTA4MNB4YWRUITQX9XTWRAN'
+        self.base_url = 'https://api.etherscan.io/api'
+        self.headers = {
+            'accept': 'application/json',
         }
-        events = []
-        while True:
-            # time.sleep(0.1)
-            r = requests.get(url, headers = self.headers, params = params).json()
-            events.extend(r['asset_events'])
-            if not r['next']:
-                break
-        
+    
+    def get_block_from_timestamp(self, timestamp: int):
+        params = {
+            'module': 'block',
+            'timestamp': str(timestamp),
+            'action': 'getblocknobytime',
+            'closest': 'before',
+            'apiKey': self.api_key
+        }
+
+        r = requests.get(self.base_url, params = params).json()
+        return r['result']
+    
+    def get_erc20_transfers(self, contract_address: str, after_date: datetime):
+        assert(isinstance(contract_address, str))
+        block_num = self.get_block_from_timestamp(int(after_date.timestamp()))
+        params = {
+            'action': 'tokentx',
+            'module': 'account',
+            'contractaddress': contract_address,
+            'sort': 'asc',
+            'apikey': self.api_key,
+            'startblock': str(block_num)
+        }
+
+        r = requests.get(self.base_url, headers = self.headers, params = params).json()
+        return r['result']
 
 def main():
     parser = argparse.ArgumentParser()
@@ -277,13 +314,22 @@ def main():
     parser.add_argument('--test_n', help = "number of requests for testsing", default = 2)
 
     args = parser.parse_args().__dict__
-    consumer = OpenSea(args['chain'])
+    # consumer = OpenSea(args['chain'])
     # consumer.save_collections(perPage = args['limit_c'], num_req = int(args['test_n']))
-    # consumer.get_collection('the-sandbox-assets')
+    # pprint(consumer.get_collection('the-sandbox-assets'))
     # print(consumer.get_collections_from_contracts())
     # consumer.save_collections()
     # pprint(consumer.get_nfts_for_collection(collection_slug='the-sandbox-assets', num_pages=10)['nfts'][30:35])
-    pprint(consumer.get_events_by_collection(collection_slug='the-sandbox-assets', after_date = datetime(2024, 1, 1, 0, 0, 0))[30:35])
+    # pprint(consumer.get_events_by_collection(collection_slug='the-sandbox-assets', after_date = datetime(2024, 1, 1, 0, 0, 0))[30:35])
+    ethscan = EtherScan()
+    t = time.time()
+    e = ethscan.get_erc20_transfers('0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b', page_num=2)
+    pprint(e[30])
+    pprint(f'--------------------------------{len(e)}----------------------------')
+    e = ethscan.get_erc20_transfers('0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b', page_num=1)
+    pprint(e[30])
+    pprint(f'--------------------------------{len(e)}----------------------------')
+    print(f'time: {time.time() - t}')
 
 if __name__ == "__main__":
     main()
