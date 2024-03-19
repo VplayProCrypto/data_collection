@@ -68,11 +68,12 @@ class Mapper:
             'collection_slug': None
         }
         mapped_event['event_type'] = event_data['event_type']
-        mapped_event['event_timestamp'] = event_data['event_timestamp']
+        mapped_event['event_timestamp'] = datetime.fromtimestamp(event_data['event_timestamp'])
         mapped_event['quantity'] = event_data['quantity']
         if mapped_event['event_type'] == 'sale':
             mapped_event['transaction_hash'] = event_data['transaction']
             mapped_event['token_id'] = event_data['nft']['identifier']
+            mapped_event['contract_address'] = event_data['nft']['contract']
             mapped_event['collection_slug'] = event_data['nft']['collection']
             mapped_event['buyer'] = event_data['buyer']
             mapped_event['seller'] = event_data['seller']
@@ -82,12 +83,14 @@ class Mapper:
         elif mapped_event['event_type'] == 'transfer':
             mapped_event['transaction_hash'] = event_data['transaction']
             mapped_event['token_id'] = event_data['nft']['identifier']
+            mapped_event['contract_address'] = event_data['nft']['contract']
             mapped_event['collection_slug'] = event_data['nft']['collection']
             mapped_event['buyer'] = event_data['to_address']
             mapped_event['seller'] = event_data['from_address']
         elif mapped_event['event_type'] == 'order':
             mapped_event['event_type'] = 'listing'
             mapped_event['token_id'] = event_data['asset']['identifier']
+            mapped_event['contract_address'] = event_data['asset']['contract']
             mapped_event['collection_slug'] = event_data['asset']['collection']
             mapped_event['seller'] = event_data['maker']
             mapped_event['start_date'] = datetime.fromtimestamp(event_data['start_date'])

@@ -337,8 +337,9 @@ def main():
     injector.raw_sql('./raw_sql/tables.sql')
     injector.raw_sql('./raw_sql/hypertables.sql')
     injector.raw_sql('./raw_sql/indexes.sql')
-    # injector.insert_collection(args['slug'])
-    # injector.insert_nfts(args['slug'], num_pages=10)
+    # injector.raw_sql('./raw_sql/compressions.sql')
+    injector.insert_collection(args['slug'])
+    injector.insert_nfts(args['slug'], num_pages=3)
     injector.insert_nft_events(args['slug'])
 
 if __name__ == "__main__":
