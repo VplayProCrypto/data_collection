@@ -5,6 +5,8 @@
 CREATE TABLE IF NOT EXISTS public.collection
 (
     opensea_slug character varying not null,
+    game_name character varying,
+    game_id character varying,
     name character varying(50) not null,
     description character varying not null,
     owner character varying not null,
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.collection
 CREATE TABLE IF NOT EXISTS public.collection_dynamic
 (
     collection_slug character varying not null,
+    game_id character varying,
     total_average_price double precision,
     total_supply double precision,
     total_volume double precision,
@@ -112,17 +115,18 @@ CREATE TABLE IF NOT EXISTS public.fee
 CREATE TABLE IF NOT EXISTS public.nft
 (
     collection_slug character varying not null,
+    game_id character varying,
     token_id character varying not null,
     contract_address character varying not null,
     token_standard character varying not null,
-    name character varying not null,
-    description character varying not null,
-    image_url character varying not null,
-    metadata_url character varying not null,
-    opensea_url character varying not null,
-    updated_at timestamp with time zone not null,
-    is_nsfw boolean not null,
-    is_disabled boolean not null,
+    name character varying,
+    description character varying,
+    image_url character varying,
+    metadata_url character varying,
+    opensea_url character varying,
+    updated_at timestamp with time zone,
+    is_nsfw boolean not null default false,
+    is_disabled boolean not null default false,
     traits jsonb,
     CONSTRAINT nft_pkey primary key (token_id, contract_address),
     CONSTRAINT nft_opensea_slug_fkey FOREIGN KEY (collection_slug)
@@ -181,13 +185,16 @@ CREATE TABLE IF NOT EXISTS public.payment_tokens
 
 CREATE TABLE IF NOT EXISTS public.nft_events
 (
-    transaction_hash character varying not null,
+    transaction_hash character varying,
+    order_hash character varying,
 	event_type text,
     token_id character varying not null,
     contract_address character varying not null,
     collection_slug character varying not null,
+    game_id character varying not null,
     seller character varying not null,
 	buyer character varying,
+    quantity integer default 1,
     price_val character varying,
     price_currency character varying,
     price_decimals character varying,
@@ -219,14 +226,15 @@ CREATE TABLE IF NOT EXISTS public.token_price
 
 CREATE TABLE IF NOT EXISTS public.nft_ownership
 (
-    buyer character varying not null,
+    buyer character varying,
     seller character varying not null,
     token_id character varying not null,
     contract_address character varying not null,
     transaction_hash character varying not null,
     buy_time timestamp with time zone not null,
-    sell_time timestamp with time zone not null,
+    sell_time timestamp with time zone,
     collection_slug character varying not null,
+    game_id character varying not null,
     CONSTRAINT nft_ownership_pkey primary key (contract_address, token_id, buy_time)
 );
 

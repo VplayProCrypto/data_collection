@@ -1,17 +1,40 @@
+import json
+
 from datetime import datetime, timedelta
 from api_requests import OpenSea, EtherScan
 from pprint import pprint
 
 class Mapper:
-    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None):
+    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "./games.json"):
         self.opensea = OpenSea()
         self.ethscan = EtherScan(eth_api_key)
+        
+        with open(game_names_file) as f:
+            self.games = json.loads(f.read())
+    
+    def _get_game_name(self, collection_slug: str):
+        name = ""
+        for i in self.games.keys():
+            if i in collection_slug:
+                name = self.games[i]
+        
+        return name
+    
+    def _get_game_id(self, collection_slug: str):
+        for i in self.games.keys():
+            if i in collection_slug:
+                return i
     
     
     def map_opensea_collection(self, collection_data: dict):
+        collection_slug = collection_data['collection']
+        game_name = self._get_game_name(collection_slug)
+        game_id = self._get_game_id(collection_slug)
         return {
             'opensea_slug': collection_data['collection'],
             'name': collection_data['name'],
+            'game_name': game_name,
+            'game_id': game_id,
             'description': collection_data['description'],
             'owner': collection_data['owner'],
             'category': collection_data['category'],
@@ -36,6 +59,7 @@ class Mapper:
             'buyer': None,
             'seller': None,
             'price_val': None,
+            'quantity': 0,
             'price_currency': None,
             'price_decimals': None,
             'start_date': None,
@@ -43,11 +67,11 @@ class Mapper:
             'event_type': None,
             'collection_slug': None
         }
-        mapped_event['transaction_hash'] = event_data['transaction']
         mapped_event['event_type'] = event_data['event_type']
         mapped_event['event_timestamp'] = event_data['event_timestamp']
         mapped_event['quantity'] = event_data['quantity']
         if mapped_event['event_type'] == 'sale':
+            mapped_event['transaction_hash'] = event_data['transaction']
             mapped_event['token_id'] = event_data['nft']['identifier']
             mapped_event['collection_slug'] = event_data['nft']['collection']
             mapped_event['buyer'] = event_data['buyer']
@@ -56,17 +80,21 @@ class Mapper:
             mapped_event['price_symbol'] = event_data['payment']['symbol']
             mapped_event['price_decimals'] = event_data['payment']['decimals']
         elif mapped_event['event_type'] == 'transfer':
+            mapped_event['transaction_hash'] = event_data['transaction']
             mapped_event['token_id'] = event_data['nft']['identifier']
             mapped_event['collection_slug'] = event_data['nft']['collection']
             mapped_event['buyer'] = event_data['to_address']
             mapped_event['seller'] = event_data['from_address']
         elif mapped_event['event_type'] == 'order':
             mapped_event['event_type'] = 'listing'
+            mapped_event['token_id'] = event_data['asset']['identifier']
+            mapped_event['collection_slug'] = event_data['asset']['collection']
             mapped_event['seller'] = event_data['maker']
             mapped_event['start_date'] = datetime.fromtimestamp(event_data['start_date'])
             t = event_data['expiration_date']
             mapped_event['expiration_date'] = datetime.fromtimestamp(t) if t else None
         
+        mapped_event['game_id'] = self._get_game_id(mapped_event['collection_slug'])
         return mapped_event
     
     def map_opensea_contract(self, contract_data: dict, collection_slug: str):
@@ -97,9 +125,12 @@ class Mapper:
         }
     
     def map_opensea_nft(self, nft_data: dict):
+        collection_slug = nft_data['collection']
+        game_id = self._get_game_id(collection_slug)
         return {
             'collection_slug': nft_data['collection'],
             'token_id': nft_data['identifier'],
+            'game_id': game_id,
             'contract_address': nft_data['contract'],
             'name': nft_data['name'],
             'description': nft_data['description'],
@@ -148,8 +179,8 @@ class Mapper:
         r['nfts'] = [self.map_opensea_nft(i) for i in r['nfts']]
         return r
     
-    def get_nft_events_for_collection(self, collection_slug: str, after_date: datetime, event_type: str = None, max_recs: int = 1000, ):
-        events = self.opensea.get_events_for_collection(collection_slug, after_date, event_type = event_type, max_recs = max_recs)
+    def get_nft_events_for_collection(self, collection_slug: str, after_date: datetime, before_date: datetime, event_type: str = None, max_recs: int = 1000):
+        events = self.opensea.get_events_for_collection(collection_slug, after_date, event_type = event_type, max_recs = max_recs, before_date = before_date)
         return [self.map_opensea_nft_event(i) for i in events]
     
     def get_erc20_transfers(self, contract_address: str, after_date: datetime, collection_slug: str):

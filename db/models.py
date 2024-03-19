@@ -17,6 +17,8 @@ class Collection(Base):
     # id: Mapped[int] = mapped_column(primary_key=True)
     opensea_slug: Mapped[str] = mapped_column(primary_key = True)
     name: Mapped[str] = mapped_column(String(50))
+    game_name: Mapped[Optional[str]]
+    game_id: Mapped[Optional[str]]
     description: Mapped[str]
     owner: Mapped[str]
     category: Mapped[str]
@@ -50,6 +52,7 @@ class CollectionDynamic(Base):
     collection_slug: Mapped[str] = mapped_column(ForeignKey("collection.opensea_slug"), primary_key=True)
     total_average_price: Mapped[float] = mapped_column(nullable=True)
     total_supply: Mapped[float] = mapped_column(nullable=True)
+    game_id: Mapped[Optional[str]]
     total_volume: Mapped[float] = mapped_column(nullable=True)
     total_num_owners: Mapped[int] = mapped_column(nullable=True)
     total_sales: Mapped[float] = mapped_column(nullable=True)
@@ -105,6 +108,7 @@ class Nft(Base):
     token_id: Mapped[str] = mapped_column(primary_key=True)
     contract_address: Mapped[str] = mapped_column(primary_key=True)
     token_standard: Mapped[str]
+    game_id: Mapped[Optional[str]]
     name: Mapped[str]
     description: Mapped[str]
     image_url: Mapped[str]
@@ -136,12 +140,14 @@ class NftEvent(Base):
     event_type: Mapped[Optional[str]]
     token_id: Mapped[str] = mapped_column(primary_key = True)
     contract_address: Mapped[str] = mapped_column(primary_key = True)
+    game_id: Mapped[Optional[str]]
     collection_slug: Mapped[str]
     seller: Mapped[str]
     buyer: Mapped[str]
     price_val: Mapped[str]
-    price_currnecy: Mapped[str]
+    price_currency: Mapped[str]
     price_decimals: Mapped[int]
+    quantity: Mapped[int] = mapped_column(default=1)
     start_date: Mapped[Optional[datetime]]
     expiration_date: Mapped[Optional[datetime]]
     event_timestamp: Mapped[str] = mapped_column(default = datetime.now, primary_key = True)
@@ -172,6 +178,7 @@ class NftOwnership(Base):
     seller: Mapped[str]
     token_id: Mapped[str] = mapped_column(primary_key = True)
     contract_address: Mapped[str] = mapped_column(primary_key = True)
+    game_id: Mapped[Optional[str]]
     transaction_hash: Mapped[str]
     buy_time: Mapped[datetime] = mapped_column(primary_key = True)
     sell_time: Mapped[datetime]

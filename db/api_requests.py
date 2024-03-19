@@ -110,6 +110,7 @@ class OpenSea:
         :param next_page: None for json save otherwise sql files
         """
         assert(perPage >= 1 and perPage <= 200), "Number of results returned per page should be between 1 and 200"
+        assert(num_pages >= 1), "Number of pages should be at least one"
         url = self.base_url + f'collection/{collection_slug}/nfts'
         i = 0
         nfts = []
@@ -133,14 +134,14 @@ class OpenSea:
         i += 1
         while params['next']:
             # time.sleep(0.1)
+            if i >= num_pages:
+                break
             r: dict = requests.get(url, params = params, headers = self.headers).json()
             nfts.extend(r['nfts'])
             params['next'] = r.get('next')
             next_pages.append(params['next'])
             i += 1
             print(f"At page {i}")
-            if i >= num_pages:
-                break
         print(f"Retrieved nfts for {collection_slug}. Total {i} pages")
         return {
             'nfts': nfts,
@@ -174,12 +175,15 @@ class OpenSea:
         else:
             return event['nft']['collection'] == collection_slug
     
-    def get_events_for_collection(self, collection_slug: str, after_date: datetime, event_type: str = None, max_recs: int = 1000) -> list:
+    def get_events_for_collection(self, collection_slug: str, after_date: datetime, before_date: datetime, event_type: str = None, max_recs: int = 1000) -> list:
+        # assert(isinstance(event_type, str)), "Event type must be str"
         url = self.base_url + f'events/collection/{collection_slug}'
         i = 0
         params = {}
         events = []
         params['after'] = int(after_date.timestamp())
+        if before_date:
+            params['before'] = int(before_date.timestamp())
         if event_type:
             params['event_type'] = [event_type]
         else:
@@ -199,6 +203,7 @@ class OpenSea:
             r = requests.get(url, headers = self.headers, params = params).json()
             e = r.get('asset_events')
             if e:
+                e = [i for i in e if self._filter_event(i, collection_slug)]
                 events.extend(e)
             else:
                 break
@@ -207,7 +212,7 @@ class OpenSea:
             print(f'retieived page {i}')
         
         print(f'Total events retrieved: {len(events)} in time: {time.time() - t}')
-        return [i for i in events if self._filter_event(i, collection_slug)]
+        return events
     
     # def _extract_offer_from_listing(self, listing):
     #     assert(isinstance(listing, dict))
