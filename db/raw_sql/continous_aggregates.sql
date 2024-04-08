@@ -14,7 +14,7 @@ select
 from collection_dynamic
 group by hour, collection_slug, floor_price_currency;
 
-create materialized view if not exists public.collection_dynamic_hourly
+create materialized view if not exists public.collection_dynamic_daily
 with (timescaledb.continous) as
 select
     time_bucket('1 day', event_timestamp) as hour,
@@ -30,7 +30,7 @@ select
 from collection_dynamic
 group by hour, collection_slug, floor_price_currency;
 
-create materialized view if not exists public.collection_dynamic_hourly
+create materialized view if not exists public.collection_dynamic_monthly
 with (timescaledb.continous) as
 select
     time_bucket('1 month', event_timestamp) as bucket,
