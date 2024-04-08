@@ -186,6 +186,8 @@ CREATE TABLE IF NOT EXISTS public.payment_tokens
 CREATE TABLE IF NOT EXISTS public.nft_events
 (
     transaction_hash character varying,
+    marketplace character varying,
+    marketplace_address character varying,
     order_hash character varying,
 	event_type text,
     token_id character varying not null,
@@ -203,6 +205,7 @@ CREATE TABLE IF NOT EXISTS public.nft_events
     event_timestamp timestamp with time zone not null,
     CONSTRAINT nft_listing_pkey primary key (contract_address, token_id, event_timestamp)
 );
+
 
 
 -- Table: public.token_price
@@ -232,6 +235,8 @@ CREATE TABLE IF NOT EXISTS public.nft_ownership
     contract_address character varying not null,
     transaction_hash character varying not null,
     buy_time timestamp with time zone not null,
+    -- token_standard character varying not null default 'erc721'::character varying,
+    quantity integer default 1,
     sell_time timestamp with time zone,
     collection_slug character varying not null,
     game_id character varying not null,
@@ -246,4 +251,23 @@ create table if not exists public.nft_dynamic
     rr numeric,
     event_timestamp timestamp with time zone not null default now(),
     constraint nft_dynamic_pk primary key (contract_address, token_id, event_timestamp)
+);
+
+CREATE TABLE IF NOT EXISTS public.nft_offers
+(
+    order_hash character varying not null,
+	event_type text,
+    token_id character varying not null,
+    contract_address character varying not null,
+    collection_slug character varying not null,
+    game_id character varying not null,
+    seller character varying not null,
+    quantity integer default 1,
+    price_val character varying,
+    price_currency character varying,
+    price_decimals character varying,
+    start_date timestamp with time zone,
+    expiration_date timestamp with time zone,
+    event_timestamp timestamp with time zone not null,
+    CONSTRAINT nft_listing_pkey primary key (contract_address, token_id, event_timestamp)
 );
