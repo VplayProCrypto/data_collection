@@ -311,6 +311,23 @@ class EtherScan:
         r = requests.get(self.base_url, headers = self.headers, params = params).json()
         return r['result']
 
+class Alchemy:
+    def __init__(self, api_key: str = 'A2_NdhaMRvpVwyotoG4wueAjfgUMGHL1'):
+        self.api_key = api_key
+        self.base_url = 'https://eth-mainnet.g.alchemy.com/v2/{api_key}'
+        self.headers = {
+            'accept': 'application/json'
+        }
+        # self.ethscan = 
+    
+    def get_nft_sales(self, contract_address: str, after_date: datetime):
+        url = self.base_url + 'getNFTSales'
+        params = {
+            'contractAddress': contract_address,
+            'taker': 'BUYER',
+            'fromBlock':
+        }
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--chain', help = "Chain to restrict the results to", default = None)
