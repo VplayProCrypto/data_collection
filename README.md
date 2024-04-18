@@ -1,23 +1,17 @@
-# data_collection
+## VPLAY Backend
 
-Repo to collect and process data from Open Mesh API
+## Server to monitor for user data POST requests fro mthe front end to analyze data and integrate it into TimescaleDB, periodically update TimescaleDB, run ML and data analytics
 
-### open mesh websockets
+### Template from from https://github.com/docker/awesome-compose/tree/master/fastapi
 
-Subscribe to them for live updates from the ethereum chain
-We need to have a cache of these events to display in our dashboards and update them as they come in
-Doesn't seem to work at the moment
+# Important Files
 
-### pythia?
+`api_requests`: contains classes for making requests to apis. Currently Opensea and EtherScan
+`transform`: Uses `api_requests` to get the data and transforms it into format that db can injest. Also masks where the data is coming from.
+`postgre_injector_orm`: contains injector functions
+`games.json`: Contains mapping from game_id to game_names. game_id is needed because some games have many collections.
 
-This seems to be where the historical data is stored in a Postgres database.
-Perhaps we need to query their database for the historical records?
-There is supposed to be a REST API and GraphQL that we can use but I can't find a reference to it.
-Hasn't been updated in a few months.
+# Important Folders
 
-
-### curl
-
-curl -X GET "https://apis.dappradar.com/v2/dapps" \
- -H "accept: application/json"\
- -H "x-api-key: InrjMd9Bxc6geuaIus7lm2wIDHqjwr3575qt6hYk" \
+`next_page`: folder stores the next page for nfts apis. Add folders as needed
+`raw_sql`: raw sql commands for tables.
