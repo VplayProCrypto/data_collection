@@ -3,6 +3,8 @@ import json
 from datetime import datetime, timedelta
 from api_requests import OpenSea, EtherScan, Alchemy
 from pprint import pprint
+from copy import deepcopy
+from utils import unflatten_nested_lists
 
 class Mapper:
     def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "./games.json"):
@@ -102,6 +104,7 @@ class Mapper:
         return mapped_event
     
     def map_alchemy_nft_sale(self, sale_data: dict, collection_slug: str, game_id: str):
+        # pprint(sale_data)
         mapped_event = {
             'transaction_hash': None,
             'token_id': None,
@@ -123,7 +126,7 @@ class Mapper:
         mapped_event['event_type'] = 'sale'
         mapped_event['event_timestamp'] = datetime.fromtimestamp(self.alchemy.timestamp_from_block(sale_data['blockNumber']))
         mapped_event['transaction_hash'] = sale_data['transactionHash']
-        mapped_event['token_id'] = sale_data['token_id']
+        mapped_event['token_id'] = sale_data['tokenId']
         mapped_event['contract_address'] = sale_data['contractAddress']
         mapped_event['collection_slug'] = collection_slug
         mapped_event['marketplace'] = sale_data['marketplace']
@@ -159,14 +162,28 @@ class Mapper:
             'marketplace_address': None
         }
         mapped_event['event_type'] = 'transfer'
-        mapped_event['event_timestamp'] = datetime.fromisoformat(transfer_data['metadata']['blockTimestamp'])
+        mapped_event['event_timestamp'] = datetime.fromisoformat(transfer_data['metadata']['blockTimestamp'][:-1])
         mapped_event['buyer'] = transfer_data['to']
         mapped_event['seller'] = transfer_data['from']
-        mapped_event[''] = transfer_data['']
-        mapped_event[''] = transfer_data['']
-        mapped_event[''] = transfer_data['']
-        mapped_event[''] = transfer_data['']
-        mapped_event[''] = transfer_data['']
+        mapped_event['transaction_hash'] = transfer_data['hash']
+        mapped_event['block_number'] = int(transfer_data['blockNum'], 16)
+        mapped_event['collection_slug'] = collection_slug
+        mapped_event['game_id'] = game_id
+        mapped_event['contract_address'] = transfer_data['rawContract']['address']
+        if transfer_data['category'] == 'erc721':
+            mapped_event['token_id'] = str(int(transfer_data['erc721TokenId'], 16))
+            mapped_event['quantity'] = 1
+            return mapped_event
+        elif transfer_data['category'] == 'erc1155':
+            mapped_events = []
+            nfts = transfer_data['erc1155Metadata']
+            for i in nfts:
+                mapped_event['token_id'] = str(int(i['tokenId'], 16))
+                mapped_event['quantity'] = int(i['value'], 16)
+                mapped_events.append(deepcopy(mapped_event))
+            return mapped_events
+        else:
+            raise ValueError(f"Invalid category: {transfer_data['category']}")
     
     def map_opensea_contract(self, contract_data: dict, collection_slug: str):
         return {
@@ -251,9 +268,47 @@ class Mapper:
         r['nfts'] = [self.map_opensea_nft(i) for i in r['nfts']]
         return r
     
-    def get_nft_events_for_collection(self, collection_slug: str, after_date: datetime, before_date: datetime, event_type: str = None, max_recs: int = 1000):
-        events = self.opensea.get_events_for_collection(collection_slug, after_date, event_type = event_type, max_recs = max_recs, before_date = before_date)
-        return [self.map_opensea_nft_event(i) for i in events]
+    def map_chain_to_alchemy_chain(self, chain: str):
+        if chain == 'ethereum':
+            return 'eth-mainnet'
+        elif chain == 'polygon':
+            return 'polygon-mainnet'
+        elif chain == 'arbitum':
+            return 'arb-mainnet'
+        # elif chain == 'polygon':
+        #     return 'polygon-mainnet'
+        # elif chain == 'polygon':
+        #     return 'polygon-mainnet'
+        else:
+            raise ValueError(f"Invalid chain: {chain}")
+    
+    def get_nft_events_for_collection(self, collection_slug: str, game_id: str, contracts: list[dict], from_block: int, event_type: str = 'transfer', max_recs: int = 1000, next_page: str | None = None):
+        if event_type == 'sale':
+            for ca in contracts:
+                # pprint(ca)
+                r = self.alchemy.get_nft_sales(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=max_recs)
+                events = r['sales']
+                # print(len(events))
+            events_mapped = [self.map_alchemy_nft_sale(i, collection_slug, game_id) for i in events]
+            return {
+                'events': unflatten_nested_lists(events_mapped),
+                'next_page': r['next_page']
+            }
+        if event_type == 'transfer':
+            for ca in contracts:
+                pprint(ca)
+                r = self.alchemy.get_nft_transfers(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=max_recs)
+                events = r['transfers']
+            events_mapped = [self.map_alchemy_nft_transfer(i, collection_slug, game_id) for i in events]
+            return {
+                'events': unflatten_nested_lists(events_mapped),
+                'next_page': r['next_page']
+            }
+        raise ValueError(f"Invalid event type: {event_type}")
+    
+    # def get_nft_events_for_collection(self, collection_slug: str, after_date: datetime, before_date: datetime, event_type: str = None, max_recs: int = 1000):
+    #     events = self.opensea.get_events_for_collection(collection_slug, after_date, event_type = event_type, max_recs = max_recs, before_date = before_date)
+    #     return [self.map_opensea_nft_event(i) for i in events]
     
     def get_erc20_transfers(self, contract_address: str, after_date: datetime, collection_slug: str):
         transfers = self.ethscan.get_erc20_transfers(contract_address, after_date)
@@ -262,16 +317,23 @@ class Mapper:
 def main():
     collection_slug = 'the-sandbox-assets'
     mapper = Mapper()
-    pprint(mapper.get_collection(collection_slug))
-    nfts = mapper.get_nfts_for_collection(collection_slug, 2)
-    e = mapper.get_nft_events_for_collection(collection_slug, datetime.now() - timedelta(days = 10), event_type = 'sale', max_recs = 300)
+    collection = mapper.get_collection(collection_slug)
+    # nfts = mapper.get_nfts_for_collection(collection_slug, 2)
+    # pprint(collection)
+    # contracts = [mapper.map_opensea_contract(i, collection_slug) for i in collection['contracts']]
+    e = mapper.get_nft_events_for_collection(collection_slug, 'abcd', contracts = collection['contracts'],
+                                             from_block=0, event_type = 'transfer',
+                                             max_recs = 100)['events']
     t = mapper.get_erc20_transfers(contract_address = '0x3845badAde8e6dFF049820680d1F14bD3903a5d0', after_date = datetime.now() - timedelta(days = 1), collection_slug = collection_slug)
-    pprint(len(nfts['nfts']))
-    pprint(nfts['next_pages'])
+    # pprint(len(nfts['nfts']))
+    # pprint(nfts['next_pages'])
     pprint(len(e))
-    pprint(e[0])
-    pprint(len(t))
-    pprint(t[0])
+    a = [i for i in e if i['quantity'] > 1]
+    pprint(a[0])
+    # pprint(e[1])
+    # pprint(e[2])
+    # pprint(len(t))
+    # pprint(t[0])
 
 if __name__ == "__main__":
     main()

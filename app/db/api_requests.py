@@ -330,7 +330,12 @@ class Alchemy:
             'taker': 'BUYER',
             'fromBlock': from_block,
             'order': 'asc',
+            'limit': per_page
         }
+        # print('-'*50)
+        # print('params')
+        # pprint(params)
+        # print('-'*50)
         if next_page:
             params['pageKey'] = next_page
         r = requests.get(url, headers = self.headers, params = params).json()
@@ -354,7 +359,7 @@ class Alchemy:
                 {
                     'fromBlock': from_block,
                     'toBlock': 'latest',
-                    'contractAddress': [contract_address],
+                    'contractAddresses': [contract_address],
                     'category': category,
                     'withMetadata': True,
                     'excludeZeroValue': True,
@@ -362,6 +367,10 @@ class Alchemy:
                 }
             ]
         }
+        # print('-'*50)
+        # print('params')
+        # pprint(payload)
+        # print('-'*50)
         if next_page:
             payload['params'][0]['pageKey'] = next_page
         r = requests.post(url, headers = self.headers, json = payload).json()

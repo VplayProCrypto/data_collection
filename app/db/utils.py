@@ -2,18 +2,18 @@ import json
 import os
 import api_requests
 
-def get_error_message(request: api_requests.Response):
-    status = request.status_code
-    if status == 200:
-        return None
-    elif status == 403:
-        print(status)
-        return "Forbidden access"
-    elif status == 500:
-        return "Internal server error"
-    else:
-        msg = request.json()['message']
-        return msg
+# def get_error_message(request: api_requests.Response):
+#     status = request.status_code
+#     if status == 200:
+#         return None
+#     elif status == 403:
+#         print(status)
+#         return "Forbidden access"
+#     elif status == 500:
+#         return "Internal server error"
+#     else:
+#         msg = request.json()['message']
+#         return msg
     
 def del_none_keys(args: dict):
     new_args = args.copy()
@@ -43,7 +43,16 @@ def append_data_to_file(file_path: str, new_data: any):
         with open(file_path, 'w') as file:
             json.dump(new_data, file, indent=4)
 
+def unflatten_nested_lists(l: list):
+    lists = [i for i in l if isinstance(i, list)]
+    new_list = [i for i in l if not isinstance(i, list)]
+    new_list.extend([j for i in lists for j in i])
+    return new_list
+
 # Example usage
-new_data = {'a':'a'} # {"new_key": "new_value"} # Replace with your actual new data
-file_path = 'your_data_file.json'
-append_data_to_file(file_path, new_data)
+# new_data = {'a':'a'} # {"new_key": "new_value"} # Replace with your actual new data
+# file_path = 'your_data_file.json'
+# append_data_to_file(file_path, new_data)
+
+# print(unflatten_nested_lists([1, 2, [3, 4], 5, [6, 7, 8], 9]))
+# print(unflatten_nested_lists([{1:1}, {1:1}, [{1:1}, {1:1}, {1:1}], {1:1}, {1:1}]))
