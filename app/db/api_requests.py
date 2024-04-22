@@ -314,7 +314,7 @@ class EtherScan:
 class Alchemy:
     def __init__(self, api_key: str = 'A2_NdhaMRvpVwyotoG4wueAjfgUMGHL1'):
         self.api_key = api_key
-        self.base_url = 'https://{chain}.g.alchemy.com/v2/{api_key}'
+        self.base_url = 'https://{chain}.g.alchemy.com/'
         self.headers = {
             'accept': 'application/json'
         }
@@ -323,7 +323,8 @@ class Alchemy:
     
     def get_nft_sales(self, contract_address: str, from_block: int = 0, next_page: str | None = None, chain: str = 'eth-mainnet', per_page: int = 1000):
         assert chain in self.supported_chains, "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
-        url = self.base_url.format(chain = chain) + 'getNFTSales'
+        url = self.base_url.format(chain = chain) + f'nft/v3/{self.api_key}/getNFTSales'
+        # url = 'https://eth-mainnet.g.alchemy.com/nft/v3/A2_NdhaMRvpVwyotoG4wueAjfgUMGHL1/getNFTSales?fromBlock=0&toBlock=latest&order=asc&contractAddress=0xa342f5d851e866e18ff98f351f2c6637f4478db5&taker=BUYER'
         params = {
             'contractAddress': contract_address,
             'taker': 'BUYER',
@@ -333,6 +334,7 @@ class Alchemy:
         if next_page:
             params['pageKey'] = next_page
         r = requests.get(url, headers = self.headers, params = params).json()
+        # pprint(r)
         return {
             'sales': r['nftSales'],
             'next_page': r['pageKey']
@@ -343,7 +345,7 @@ class Alchemy:
         max_count = hex(per_page)
         from_block = hex(from_block)
         category = ['erc721', 'erc1155', 'specialnft']
-        url = self.base_url.format(chain = chain)
+        url = self.base_url.format(chain = chain) + f'v2/{self.api_key}'
         payload = {
             'id': 1,
             'jsonrpc': '2.0',
@@ -364,8 +366,8 @@ class Alchemy:
             payload['params'][0]['pageKey'] = next_page
         r = requests.post(url, headers = self.headers, json = payload).json()
         return {
-            'transfers': r['results']['transfers'],
-            'next_page': r['results']['pageKey']
+            'transfers': r['result']['transfers'],
+            'next_page': r['result']['pageKey']
         }
 
 def main():
@@ -375,7 +377,7 @@ def main():
     parser.add_argument('--limit_n', help = "limit for nfts endpoint", default = 200)
     parser.add_argument('--test_n', help = "number of requests for testsing", default = 2)
 
-    args = parser.parse_args().__dict__
+    args = parser.parse_args()
     # consumer = OpenSea(args['chain'])
     # consumer.save_collections(perPage = args['limit_c'], num_req = int(args['test_n']))
     # pprint(consumer.get_collection('the-sandbox-assets'))
@@ -392,13 +394,13 @@ def main():
     # pprint(e[30])
     # pprint(f'--------------------------------{len(e)}----------------------------')
     alchemy = Alchemy()
-    txs = alchemy.get_nft_transfers('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = 'eth-mainnet')
-    sales = alchemy.get_nft_sales('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = 'eth-mainnet')
+    txs = alchemy.get_nft_transfers('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = args.chain)
+    sales = alchemy.get_nft_sales('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = args.chain)
     print('-'*50)
-    print(f'NFT sales: {len(sales['sales'])}')
-    print(f'NFT transfers: {len(txs['transfers'])}')
-    pprint('sale:', sales['sales'][0])
-    pprint('transfer:', txs['transfers'][0])
+    print(f'NFT sales: {len(sales["sales"])}')
+    print(f'NFT transfers: {len(txs["transfers"])}')
+    print('sale:', sales['sales'][0])
+    print('transfer:', txs['transfers'][0])
     print('-'*50)
     print(f'time: {time.time() - t}')
 
