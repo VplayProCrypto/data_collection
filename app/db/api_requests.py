@@ -377,10 +377,11 @@ class Alchemy:
             "id": 1,
             "jsonrpc": "2.0",
             "method": "eth_getBlockByNumber",
-            "params": [hex(block_num), "finalized"]
+            "params": [hex(block_num), False]
         }
         r = requests.post(url, headers = self.headers, json = payload).json()
-        return int(r['result']['timestamp'])
+        # pprint(r)
+        return int(r['result']['timestamp'], 16)
 
 def main():
     parser = argparse.ArgumentParser()
