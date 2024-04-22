@@ -166,6 +166,26 @@ class Mapper:
             'event_timestamp': datetime.fromtimestamp(price_data[''])
         }
     
+    def map_alchemy_nft_sale(self, sale_data: dict)
+        mapped_event = {
+            'transaction_hash': None,
+            'token_id': None,
+            'contract_address': None,
+            'event_timestamp': None,
+            'buyer': None,
+            'seller': None,
+            'price_val': None,
+            'quantity': 0,
+            'price_currency': None,
+            'price_decimals': None,
+            'start_date': None,
+            'expiration_date': None,
+            'event_type': None,
+            'collection_slug': None
+        }
+        mapped_event['event_type'] = 'sale'
+        mapped_event['event_timestamp'] = self.
+    
     def get_collection(self, collection_slug: str):
         collection_data = self.opensea.get_collection(collection_slug)
         collection = self.map_opensea_collection(collection_data)

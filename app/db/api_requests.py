@@ -369,6 +369,18 @@ class Alchemy:
             'transfers': r['result']['transfers'],
             'next_page': r['result']['pageKey']
         }
+    
+    def timestamp_from_block(self, block_num: int, chain: str = 'eth-mainnet'):
+        assert chain in self.supported_chains, "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+        url = self.base_url.format(chain = chain) + f'v2/{self.api_key}'
+        payload = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "eth_getBlockByNumber",
+            "params": [hex(block_num), "finalized"]
+        }
+        r = requests.post(url, headers = self.headers, json = payload).json()
+        return int(r['result']['timestamp'])
 
 def main():
     parser = argparse.ArgumentParser()
@@ -396,11 +408,13 @@ def main():
     alchemy = Alchemy()
     txs = alchemy.get_nft_transfers('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = args.chain)
     sales = alchemy.get_nft_sales('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = args.chain)
+    timestamp = alchemy.timestamp_from_block(11668641)
     print('-'*50)
     print(f'NFT sales: {len(sales["sales"])}')
     print(f'NFT transfers: {len(txs["transfers"])}')
     print('sale:', sales['sales'][0])
     print('transfer:', txs['transfers'][0])
+    print(timestamp)
     print('-'*50)
     print(f'time: {time.time() - t}')
 

@@ -131,6 +131,7 @@ CREATE TABLE IF NOT EXISTS public.nft_events
     transaction_hash character varying,
     marketplace character varying,
     marketplace_address character varying,
+    block_number bigint,
     order_hash character varying,
     event_type text,
     token_id character varying not null,
