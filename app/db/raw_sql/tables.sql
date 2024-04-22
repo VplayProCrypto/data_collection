@@ -144,8 +144,6 @@ CREATE TABLE IF NOT EXISTS public.nft_events
     price_val character varying,
     price_currency character varying,
     price_decimals character varying,
-    start_date timestamp with time zone,
-    expiration_date timestamp with time zone,
     event_timestamp timestamp with time zone not null,
     CONSTRAINT nft_events_pkey primary key (contract_address, token_id, event_timestamp),
     CONSTRAINT nft_events_token_id_fkey FOREIGN KEY (token_id, contract_address)

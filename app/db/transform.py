@@ -1,13 +1,14 @@
 import json
 
 from datetime import datetime, timedelta
-from api_requests import OpenSea, EtherScan
+from api_requests import OpenSea, EtherScan, Alchemy
 from pprint import pprint
 
 class Mapper:
     def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "./games.json"):
         self.opensea = OpenSea()
         self.ethscan = EtherScan(eth_api_key)
+        self.alchemy = Alchemy()
         
         with open(game_names_file) as f:
             self.games = json.loads(f.read())
@@ -100,6 +101,73 @@ class Mapper:
         mapped_event['game_id'] = self._get_game_id(mapped_event['collection_slug'])
         return mapped_event
     
+    def map_alchemy_nft_sale(self, sale_data: dict, collection_slug: str, game_id: str):
+        mapped_event = {
+            'transaction_hash': None,
+            'token_id': None,
+            'contract_address': None,
+            'event_timestamp': None,
+            'buyer': None,
+            'block_number': None,
+            'seller': None,
+            'price_val': None,
+            'quantity': 0,
+            'price_currency': None,
+            'price_decimals': None,
+            'event_type': None,
+            'collection_slug': None,
+            'game_id': None,
+            'marketplace': None,
+            'marketplace_address': None
+        }
+        mapped_event['event_type'] = 'sale'
+        mapped_event['event_timestamp'] = datetime.fromtimestamp(self.alchemy.timestamp_from_block(sale_data['blockNumber']))
+        mapped_event['transaction_hash'] = sale_data['transactionHash']
+        mapped_event['token_id'] = sale_data['token_id']
+        mapped_event['contract_address'] = sale_data['contractAddress']
+        mapped_event['collection_slug'] = collection_slug
+        mapped_event['marketplace'] = sale_data['marketplace']
+        mapped_event['marketplace_address'] = sale_data['marketplaceAddress']
+        mapped_event['game_id'] = game_id
+        mapped_event['buyer'] = sale_data['buyerAddress']
+        mapped_event['seller'] = sale_data['sellerAddress']
+        mapped_event['price_val'] = sale_data['sellerFee']['amount']
+        mapped_event['price_currency'] = sale_data['sellerFee']['symbol']
+        mapped_event['price_decimals'] = sale_data['sellerFee']['decimals']
+        mapped_event['block_number'] = sale_data['blockNumber']
+        mapped_event['quantity'] = int(sale_data['quantity'])
+
+        return mapped_event
+    
+    def map_alchemy_nft_transfer(Self, transfer_data: dict, collection_slug: str, game_id: str):
+        mapped_event = {
+            'transaction_hash': None,
+            'token_id': None,
+            'contract_address': None,
+            'event_timestamp': None,
+            'block_number': None,
+            'buyer': None,
+            'seller': None,
+            'price_val': None,
+            'quantity': 0,
+            'price_currency': None,
+            'price_decimals': None,
+            'event_type': None,
+            'collection_slug': None,
+            'game_id': None,
+            'marketplace': None,
+            'marketplace_address': None
+        }
+        mapped_event['event_type'] = 'transfer'
+        mapped_event['event_timestamp'] = datetime.fromisoformat(transfer_data['metadata']['blockTimestamp'])
+        mapped_event['buyer'] = transfer_data['to']
+        mapped_event['seller'] = transfer_data['from']
+        mapped_event[''] = transfer_data['']
+        mapped_event[''] = transfer_data['']
+        mapped_event[''] = transfer_data['']
+        mapped_event[''] = transfer_data['']
+        mapped_event[''] = transfer_data['']
+    
     def map_opensea_contract(self, contract_data: dict, collection_slug: str):
         return {
             'collection_slug': collection_slug,
@@ -166,25 +234,6 @@ class Mapper:
             'event_timestamp': datetime.fromtimestamp(price_data[''])
         }
     
-    def map_alchemy_nft_sale(self, sale_data: dict)
-        mapped_event = {
-            'transaction_hash': None,
-            'token_id': None,
-            'contract_address': None,
-            'event_timestamp': None,
-            'buyer': None,
-            'seller': None,
-            'price_val': None,
-            'quantity': 0,
-            'price_currency': None,
-            'price_decimals': None,
-            'start_date': None,
-            'expiration_date': None,
-            'event_type': None,
-            'collection_slug': None
-        }
-        mapped_event['event_type'] = 'sale'
-        mapped_event['event_timestamp'] = self.
     
     def get_collection(self, collection_slug: str):
         collection_data = self.opensea.get_collection(collection_slug)
