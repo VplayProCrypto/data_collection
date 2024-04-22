@@ -1,0 +1,6 @@
+fastapi
+fastapi_utils
+uvicorn
+requests
+SQLAlchemy
+psycopg2-binary
