@@ -314,18 +314,58 @@ class EtherScan:
 class Alchemy:
     def __init__(self, api_key: str = 'A2_NdhaMRvpVwyotoG4wueAjfgUMGHL1'):
         self.api_key = api_key
-        self.base_url = 'https://eth-mainnet.g.alchemy.com/v2/{api_key}'
+        self.base_url = 'https://{chain}.g.alchemy.com/v2/{api_key}'
         self.headers = {
             'accept': 'application/json'
         }
-        # self.ethscan = 
+        self.supported_chains = ['eth-mainnet', 'polygon-mainnet', 'arb-mainnet', 'starknet-mainnet', 'opt-mainnet']
+        self.ethscan = EtherScan()
     
-    def get_nft_sales(self, contract_address: str, after_date: datetime):
-        url = self.base_url + 'getNFTSales'
+    def get_nft_sales(self, contract_address: str, from_block: int = 0, next_page: str | None = None, chain: str = 'eth-mainnet', per_page: int = 1000):
+        assert chain in self.supported_chains, "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+        url = self.base_url.format(chain = chain) + 'getNFTSales'
         params = {
             'contractAddress': contract_address,
             'taker': 'BUYER',
-            'fromBlock':
+            'fromBlock': from_block,
+            'order': 'asc',
+        }
+        if next_page:
+            params['pageKey'] = next_page
+        r = requests.get(url, headers = self.headers, params = params).json()
+        return {
+            'sales': r['nftSales'],
+            'next_page': r['pageKey']
+        }
+    
+    def get_nft_transfers(self, contract_address: str, from_block: int = 0, per_page: int = 1000, chain: str = 'eth-mainmet', next_page: str | None = None):
+        assert chain in self.supported_chains, "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+        max_count = hex(per_page)
+        from_block = hex(from_block)
+        category = ['erc721', 'erc1155', 'specialnft']
+        url = self.base_url.format(chain = chain)
+        payload = {
+            'id': 1,
+            'jsonrpc': '2.0',
+            'method': 'alchemy_getAssetTransfers',
+            'params': [
+                {
+                    'fromBlock': from_block,
+                    'toBlock': 'latest',
+                    'contractAddress': [contract_address],
+                    'category': category,
+                    'withMetadata': True,
+                    'excludeZeroValue': True,
+                    'maxCount': max_count
+                }
+            ]
+        }
+        if next_page:
+            payload['params'][0]['pageKey'] = next_page
+        r = requests.post(url, headers = self.headers, json = payload).json()
+        return {
+            'transfers': r['results']['transfers'],
+            'next_page': r['results']['pageKey']
         }
 
 def main():
@@ -345,12 +385,21 @@ def main():
     # pprint(consumer.get_events_by_collection(collection_slug='the-sandbox-assets', after_date = datetime(2024, 1, 1, 0, 0, 0))[30:35])
     ethscan = EtherScan()
     t = time.time()
-    e = ethscan.get_erc20_transfers('0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b', page_num=2)
-    pprint(e[30])
-    pprint(f'--------------------------------{len(e)}----------------------------')
-    e = ethscan.get_erc20_transfers('0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b', page_num=1)
-    pprint(e[30])
-    pprint(f'--------------------------------{len(e)}----------------------------')
+    # e = ethscan.get_erc20_transfers('0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b', page_num=2)
+    # pprint(e[30])
+    # pprint(f'--------------------------------{len(e)}----------------------------')
+    # e = ethscan.get_erc20_transfers('0xBB0E17EF65F82Ab018d8EDd776e8DD940327B28b', page_num=1)
+    # pprint(e[30])
+    # pprint(f'--------------------------------{len(e)}----------------------------')
+    alchemy = Alchemy()
+    txs = alchemy.get_nft_transfers('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = 'eth-mainnet')
+    sales = alchemy.get_nft_sales('0xa342f5d851e866e18ff98f351f2c6637f4478db5', from_block = 0, per_page = 1000, chain = 'eth-mainnet')
+    print('-'*50)
+    print(f'NFT sales: {len(sales['sales'])}')
+    print(f'NFT transfers: {len(txs['transfers'])}')
+    pprint('sale:', sales['sales'][0])
+    pprint('transfer:', txs['transfers'][0])
+    print('-'*50)
     print(f'time: {time.time() - t}')
 
 if __name__ == "__main__":
