@@ -10,9 +10,9 @@ def hello_world():
     return {"message": "OK"}
 
 
-@app.on_event("startup")
-def print_uaw() -> None:
-    print(get_uaw_from_dappradar("9495", "30d"))
+# @app.on_event("startup")
+# def print_uaw() -> None:
+#     print(get_uaw_from_dappradar("9495", "30d"))
 
 
 @app.on_event("startup")
