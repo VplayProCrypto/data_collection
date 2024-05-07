@@ -4,21 +4,22 @@ from sqlalchemy import text, func, create_engine, inspect, select
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
-from models import Collection, CollectionDynamic, Contract, Nft, NftEvent, \
-    NftOwnership, Erc20Transfer, PaymentTokens, TokenPrice, Fee
+from .models import Collection, CollectionDynamic, Contract, Nft, NftEvent, \
+    NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee
+# from .initialize_functions import initialize_db
 import psycopg2
 import argparse
-from transform import Mapper
+from .transform import Mapper
 import time
 import json
 
 class Injector:
     def __init__(self, username: str = None, password: str = None, port: str = None, database: str = None, host: str = None, eth_api_key: str = None, alchemy_api_key: str = None):
         self.username = 'tsdbadmin'
-        self.port = '36429'
+        self.port = '32026'
         self.database = 'tsdb'
-        self.password = 'aezef0ugdk5hu4a8'
-        self.host = 'atedt3o7e4.rmlbm9je29.tsdb.cloud.timescale.com'
+        self.password = 'km8en9w8a96ghdtl'
+        self.host = 'busvxhxzr1.b505mpo6st.tsdb.cloud.timescale.com'
         if not username:
             self.url = f'postgresql+psycopg2://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
         else:
@@ -210,11 +211,13 @@ def main():
     args = parser.parse_args().__dict__
     # injector = Injector(username='tsdbadmin', password='m9u74pu73bg9fdxi', host='v4ob0qdj5t.y1jft9lh0x.tsdb.cloud.timescale.com', port='35641', database='tsdb')
     injector = Injector()
-    injector.raw_sql('./raw_sql/drop_tables.sql')
-    injector.raw_sql('./raw_sql/tables.sql')
-    injector.raw_sql('./raw_sql/hypertables.sql')
-    injector.raw_sql('./raw_sql/indexes.sql')
-    # injector.raw_sql('./raw_sql/compressions.sql')
+    
+    injector.raw_sql('./app/db/raw_sql/drop_tables.sql')
+    injector.raw_sql('./app/db/raw_sql/tables.sql')
+    injector.raw_sql('./app/db/raw_sql/hypertables.sql')
+    injector.raw_sql('./app/db/raw_sql/indexes.sql')
+    # injector.raw_sql('./app/db/raw_sql/compressions.sql')
+    # initialize_db()
     injector.insert_collection(args['slug'])
     injector.insert_nfts(args['slug'], num_pages=3)
     injector.insert_nft_events(args['slug'])

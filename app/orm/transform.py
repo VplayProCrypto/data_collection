@@ -1,13 +1,15 @@
 import json
 
 from datetime import datetime, timedelta
-from api_requests import OpenSea, EtherScan, Alchemy
 from pprint import pprint
 from copy import deepcopy
-from utils import unflatten_nested_lists
+from ..api_requests.alchemy import Alchemy
+from ..api_requests.opensea import OpenSea
+from ..api_requests.etherscan import EtherScan
+from ..utils import unflatten_nested_lists
 
 class Mapper:
-    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "./games.json"):
+    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "app/games.json"):
         self.opensea = OpenSea()
         self.ethscan = EtherScan(eth_api_key)
         self.alchemy = Alchemy()

@@ -1,21 +1,21 @@
-DROP TABLE IF EXISTS public.nft_dynamic;
+DROP TABLE IF EXISTS public.nft_dynamic cascade;
 
-DROP TABLE IF EXISTS public.nft_ownership;
+DROP TABLE IF EXISTS public.nft_ownership cascade;
 
-DROP TABLE IF EXISTS public.token_price;
+DROP TABLE IF EXISTS public.token_price cascade;
 
-DROP TABLE IF EXISTS public.nft_events;
+DROP TABLE IF EXISTS public.nft_events cascade;
 
-DROP TABLE IF EXISTS public.payment_tokens;
+DROP TABLE IF EXISTS public.payment_tokens cascade;
 
-DROP TABLE IF EXISTS public.nft;
+DROP TABLE IF EXISTS public.nft cascade;
 
-DROP TABLE IF EXISTS public.fee;
+DROP TABLE IF EXISTS public.fee cascade;
 
-DROP TABLE IF EXISTS public.erc20_transfers;
+DROP TABLE IF EXISTS public.erc20_transfers cascade;
 
-DROP TABLE IF EXISTS public.contract;
+DROP TABLE IF EXISTS public.contract cascade;
 
-DROP TABLE IF EXISTS public.collection_dynamic;
+DROP TABLE IF EXISTS public.collection_dynamic cascade;
 
-DROP TABLE IF EXISTS public.collection;
+DROP TABLE IF EXISTS public.collection cascade;

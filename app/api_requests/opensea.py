@@ -11,7 +11,8 @@ class OpenSea:
     # class to consume the open sea API
     def __init__(self, chain: str = None):
         # :params chain: chain to search for. Default = None for searching all chains
-        self.base_url = os.environ.get('OPENSEA_BASE_URL')
+        # self.base_url = os.environ.get('OPENSEA_BASE_URL')
+        self.base_url = ''
         self.headers = {
             "accept": 'application/json',
             'x-api-key': os.environ.get('OPENSEA_API_KEY')

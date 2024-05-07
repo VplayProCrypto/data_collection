@@ -5,6 +5,7 @@ from pprint import pprint
 import argparse
 import time
 from datetime import datetime, date, timedelta
+from .etherscan import EtherScan
 # from utils import append_data_to_file
 
 class Alchemy:
