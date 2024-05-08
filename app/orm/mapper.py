@@ -14,6 +14,8 @@ from models import (
     Event,
     Fee,
     NFT,
+    NFTListing,
+    NFTOffer,
     PaymentToken,
     TokenPrice,
     NFTOwnership,
@@ -256,6 +258,60 @@ class Mapper:
             return events
         else:
             raise ValueError(f"Invalid category: {transfer_data['category']}")
+
+    def map_opensea_listing(
+        self, listing: dict, collection_slug: str, game_id: str
+    ) -> NFTListing:
+        return NFTListing(
+            order_hash=listing["order_hash"],
+            token_id=str(
+                int(
+                    listing["protocol_data"]["parameters"]["offer"][0][
+                        "identifierOrCriteria"
+                    ]
+                )
+            ),
+            contract_address=listing["protocol_data"]["parameters"]["offer"][0][
+                "token"
+            ],
+            collection_slug=collection_slug,
+            game_id=game_id,
+            seller=listing["protocol_data"]["parameters"]["offerer"],
+            price_val=listing["price"]["current"]["value"],
+            price_currency=listing["price"]["current"]["currency"],
+            price_decimals=str(listing["price"]["current"]["decimals"]),
+            start_date=datetime.fromtimestamp(
+                int(listing["protocol_data"]["parameters"]["startTime"])
+            ),
+            expiration_date=datetime.fromtimestamp(
+                int(listing["protocol_data"]["parameters"]["endTime"])
+            ),
+            event_timestamp=datetime.now(),
+        )
+
+    def map_opensea_offer(
+        self, offer: dict, collection_slug: str, game_id: str
+    ) -> NFTOffer:
+        return NFTOffer(
+            order_hash=offer["order_hash"],
+            event_type="offer",
+            token_id=str(int(offer["criteria"]["encoded_token_ids"])),
+            contract_address=offer["criteria"]["contract"]["address"],
+            collection_slug=collection_slug,
+            game_id=game_id,
+            seller=offer["protocol_data"]["parameters"]["offerer"],
+            quantity=1,  # Assuming quantity is always 1 for offers
+            price_val=offer["price"]["value"],
+            price_currency=offer["price"]["currency"],
+            price_decimals=str(offer["price"]["decimals"]),
+            start_date=datetime.fromtimestamp(
+                int(offer["protocol_data"]["parameters"]["startTime"])
+            ),
+            expiration_date=datetime.fromtimestamp(
+                int(offer["protocol_data"]["parameters"]["endTime"])
+            ),
+            event_timestamp=datetime.now(),
+        )
 
     def get_nfts_for_collection(
         self, collection_slug: str, num_pages: int = 10, next_page: str = None
