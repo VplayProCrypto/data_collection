@@ -1,15 +1,12 @@
 import requests
 import os
 
-def get_uaw_from_dappradar(dappradar_id: str, time_range: str) -> str:
-    base_url = os.environ.get('DAPPRADAR_BASE_URL')
-    api_key = os.environ.get('DAPPRADAR_API_KEY')
-    
-    response = requests.get(f"{base_url}/dapps/{dappradar_id}",
+def get_uaw_from_dappradar(dappradar_id: str, time_range: str) -> str:    
+    response = requests.get(f"{os.environ.get('DAPPRADAR_BASE_URL')}/dapps/{dappradar_id}",
                             params={"range": time_range},
                             headers={
                                 "accept": "application/json",
-                                "x-api-key": api_key
+                                "x-api-key": os.environ.get('DAPPRADAR_API_KEY')
                             })
     response.raise_for_status()
     data = response.json()
