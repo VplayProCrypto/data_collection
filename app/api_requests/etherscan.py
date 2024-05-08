@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 
 
 class EtherScan:
-    def __init__(self, api_key: str = None):
+    def __init__(self ):
 
         self.api_key = os.environ.get('ETHERSCAN_API_KEY')
         self.base_url = os.environ.get('ETHERSCAN_BASE_URL')

@@ -1,7 +1,9 @@
 import json
 
 from datetime import datetime, timedelta
-from api_requests import OpenSea, EtherScan, Alchemy
+from api_requests.alchemy import Alchemy
+from api_requests.opensea import OpenSea
+from api_requests.etherScan import EtherScan
 from pprint import pprint
 from copy import deepcopy
 from utils import unflatten_nested_lists

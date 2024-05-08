@@ -20,7 +20,6 @@ class Alchemy:
     def get_nft_sales(self, contract_address: str, from_block: int = 0, next_page: str | None = None, chain: str = 'eth-mainnet', per_page: int = 1000):
         assert chain in self.supported_chains, "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
         url = self.base_url.format(chain = chain) + f'nft/v3/{self.api_key}/getNFTSales'
-        # url = 'https://eth-mainnet.g.alchemy.com/nft/v3/A2_NdhaMRvpVwyotoG4wueAjfgUMGHL1/getNFTSales?fromBlock=0&toBlock=latest&order=asc&contractAddress=0xa342f5d851e866e18ff98f351f2c6637f4478db5&taker=BUYER'
         params = {
             'contractAddress': contract_address,
             'taker': 'BUYER',
