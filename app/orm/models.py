@@ -1,6 +1,15 @@
 from typing import Optional
 from sqlmodel import Field, Relationship, SQLModel
-from sqlalchemy import Column, Boolean, Integer, String, TIMESTAMP, ForeignKeyConstraint, JSON
+from sqlalchemy import (
+    Column,
+    Boolean,
+    Integer,
+    String,
+    TIMESTAMP,
+    ForeignKeyConstraint,
+    JSON,
+)
+
 
 class Collection(SQLModel, table=True):
     __tablename__ = "collection"
@@ -23,10 +32,13 @@ class Collection(SQLModel, table=True):
     created_date: TIMESTAMP = Field(default=TIMESTAMP(timezone=True))
     updated_at: TIMESTAMP = Field(default=TIMESTAMP(timezone=True))
 
+
 class CollectionDynamic(SQLModel, table=True):
     __tablename__ = "collection_dynamic"
 
-    collection_slug: str = Field(primary_key=True, foreign_key="collection.opensea_slug")
+    collection_slug: str = Field(
+        primary_key=True, foreign_key="collection.opensea_slug"
+    )
     game_id: Optional[str]
     total_average_price: Optional[float]
     total_supply: Optional[float]
@@ -49,12 +61,14 @@ class CollectionDynamic(SQLModel, table=True):
     discord_sentiment: Optional[float]
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
+
 class Contract(SQLModel, table=True):
     __tablename__ = "contract"
 
     collection_slug: str = Field(foreign_key="collection.opensea_slug")
     contract_address: str = Field(primary_key=True)
     chain: str = Field(primary_key=True)
+
 
 class ERC20Transfer(SQLModel, table=True):
     __tablename__ = "erc20_transfers"
@@ -69,12 +83,16 @@ class ERC20Transfer(SQLModel, table=True):
     event_timestamp: TIMESTAMP = Field(primary_key=True)
     collection_slug: Optional[str]
 
+
 class Fee(SQLModel, table=True):
     __tablename__ = "fee"
 
-    collection_slug: str = Field(primary_key=True, foreign_key="collection.opensea_slug")
+    collection_slug: str = Field(
+        primary_key=True, foreign_key="collection.opensea_slug"
+    )
     fee: float
     recipient: str = Field(primary_key=True)
+
 
 class NFT(SQLModel, table=True):
     __tablename__ = "nft"
@@ -94,14 +112,29 @@ class NFT(SQLModel, table=True):
     is_disabled: bool = Field(default=False)
     traits: Optional[dict] = Field(sa_column=Column(JSON))
 
+
 class PaymentToken(SQLModel, table=True):
     __tablename__ = "payment_tokens"
 
-    collection_slug: str = Field(primary_key=True, foreign_key="collection.opensea_slug")
+    collection_slug: str = Field(
+        primary_key=True, foreign_key="collection.opensea_slug"
+    )
     contract_address: str = Field(primary_key=True)
     symbol: Optional[str]
     decimals: int
     chain: str
+
+
+class TokenPrice(SQLModel, table=True):
+    __tablename__ = "token_price"
+
+    contract_address: str = Field(primary_key=True)
+    eth_price: float
+    usdt_price: float
+    usdt_conversion_price: Optional[float]
+    eth_conversion_price: Optional[float]
+    event_timestamp: TIMESTAMP = Field(primary_key=True)
+
 
 class NFTEvent(SQLModel, table=True):
     __tablename__ = "nft_events"
@@ -125,18 +158,11 @@ class NFTEvent(SQLModel, table=True):
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
     __table_args__ = (
-        ForeignKeyConstraint(["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]),
+        ForeignKeyConstraint(
+            ["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]
+        ),
     )
 
-class TokenPrice(SQLModel, table=True):
-    __tablename__ = "token_price"
-
-    contract_address: str = Field(primary_key=True)
-    eth_price: float
-    usdt_price: float
-    usdt_conversion_price: Optional[float]
-    eth_conversion_price: Optional[float]
-    event_timestamp: TIMESTAMP = Field(primary_key=True)
 
 class NFTOwnership(SQLModel, table=True):
     __tablename__ = "nft_ownership"
@@ -153,8 +179,11 @@ class NFTOwnership(SQLModel, table=True):
     game_id: str
 
     __table_args__ = (
-        ForeignKeyConstraint(["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]),
+        ForeignKeyConstraint(
+            ["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]
+        ),
     )
+
 
 class NFTDynamic(SQLModel, table=True):
     __tablename__ = "nft_dynamic"
@@ -163,11 +192,16 @@ class NFTDynamic(SQLModel, table=True):
     token_id: str = Field(primary_key=True)
     contract_address: str = Field(primary_key=True)
     rr: Optional[float]
-    event_timestamp: TIMESTAMP = Field(default=TIMESTAMP(timezone=True), primary_key=True)
+    event_timestamp: TIMESTAMP = Field(
+        default=TIMESTAMP(timezone=True), primary_key=True
+    )
 
     __table_args__ = (
-        ForeignKeyConstraint(["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]),
+        ForeignKeyConstraint(
+            ["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]
+        ),
     )
+
 
 class NFTOffer(SQLModel, table=True):
     __tablename__ = "nft_offers"
@@ -188,8 +222,11 @@ class NFTOffer(SQLModel, table=True):
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
     __table_args__ = (
-        ForeignKeyConstraint(["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]),
+        ForeignKeyConstraint(
+            ["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]
+        ),
     )
+
 
 class NFTListing(SQLModel, table=True):
     __tablename__ = "nft_listings"
@@ -208,5 +245,7 @@ class NFTListing(SQLModel, table=True):
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
     __table_args__ = (
-        ForeignKeyConstraint(["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]),
+        ForeignKeyConstraint(
+            ["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]
+        ),
     )
