@@ -5,3 +5,5 @@ requests
 SQLAlchemy
 psycopg2-binary
 sqlmodel
+urllib3
+tweepy
