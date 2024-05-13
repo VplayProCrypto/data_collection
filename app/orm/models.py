@@ -54,11 +54,18 @@ class CollectionDynamic(SQLModel, table=True):
     daily_uaw: Optional[int]
     monthly_uaw: Optional[int]
     total_wallets: Optional[int]
+    twitter_followers: Optional[int]
     twitter_sentiment: Optional[float]
+    facebook_followers: Optional[int]
     facebook_sentiment: Optional[float]
+    instagram_followers: Optional[int]
     instagram_sentiment: Optional[float]
+    reddit_users: Optional[int]
     reddit_sentiment: Optional[float]
+    discord_users: Optional[int]
     discord_sentiment: Optional[float]
+    telegram_supergroup_size: Optional[int]
+    telegram_sentiment: Optional[float]
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
 
