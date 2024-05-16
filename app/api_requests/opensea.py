@@ -104,7 +104,8 @@ class OpenSea:
         db: Session,
         collection_slug: str,
         next_page: str = "start",
-        pages: int = 500,
+        # should be enough to get all nfts and not crash our database
+        pages: int = 100000,
     ):
         url = _self_.base_url + f"collection/{collection_slug}/nfts"
         params = {}
@@ -147,22 +148,59 @@ class OpenSea:
             db.close()
             print(f"No more NFTs found for {collection_slug}.")
 
-    def save_all_nft_listings_for_collection(self, db: Session, collection_slug: str):
-        url = _self_.base_url + f"collection/{collection_slug}/listings"
-        response: dict = requests.get(url, headers=_self_.headers).json()
+    def save_all_nft_listings_for_collection(
+        self,
+        db: Session,
+        collection_slug: str,
+        next_page: str = "start",
+    ):
+        url = _self_.base_url + f"listings/collection/{collection_slug}/all"
+        params = {}
+
+        if next_page != "start":
+            params["next"] = next_page
+
+        response: dict = requests.get(url, params=params, headers=_self_.headers).json()
 
         if response.get("listings"):
             for listing_data in response["listings"]:
                 listing = NFTListing(
-                    collection_slug=listing_data["collection"],
+                    order_hash=listing_data["order_hash"],
                     token_id=listing_data["token_id"],
-                    price=listing_data["price"],
-                    currency_symbol=listing_data["currency_symbol"],
-                    quantity=listing_data["quantity"],
-                    created_date=listing_data["created_date"],
+                    contract_address=listing_data["contract_address"],
+                    collection_slug=collection_slug,
+                    game_id=get_game_id(collection_slug, _self_.games),
+                    seller=listing_data["seller"],
+                    price_val=listing_data.get("price", {}).get("value"),
+                    price_currency=listing_data.get("price", {}).get("currency"),
+                    price_decimals=listing_data.get("price", {}).get("decimals"),
+                    start_date=(
+                        datetime.fromisoformat(listing_data["start_date"])
+                        if listing_data.get("start_date")
+                        else None
+                    ),
+                    expiration_date=(
+                        datetime.fromisoformat(listing_data["expiration_date"])
+                        if listing_data.get("expiration_date")
+                        else None
+                    ),
+                    event_timestamp=datetime.fromisoformat(
+                        listing_data["event_timestamp"]
+                    ),
                 )
                 db.add(listing)
                 db.commit()
+
+            next_page = response.get("next")
+            print(f"Next page: {next_page}")
+
+            if next_page is not None:
+                self.save_all_nft_listings_for_collection(
+                    db, collection_slug, next_page
+                )
+        else:
+            db.close()
+            print(f"No more NFT listings found for {collection_slug}.")
 
     def get_nfts_for_collection(
         self,
