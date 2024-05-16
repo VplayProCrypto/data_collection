@@ -76,6 +76,78 @@ class Alchemy:
 
         return {"sales": sales, "next_page": response["pageKey"]}
 
+    def save_all_nft_sales_for_contract(
+        self,
+        db: Session,
+        contract_address: str,
+        collection_slug: str,
+        game_id: str,
+        from_block: int = 0,
+        next_page: str = "start",
+        chain: str = "eth-mainnet",
+    ):
+        assert (
+            chain in _self_.supported_chains
+        ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+
+        url = (
+            _self_.base_url.format(chain=chain) + f"nft/v3/{_self_.api_key}/getNFTSales"
+        )
+        params = {
+            "contractAddress": contract_address,
+            "taker": "BUYER",
+            "fromBlock": from_block,
+            "order": "asc",
+            "limit": 1000,
+        }
+
+        if next_page != "start":
+            params["pageKey"] = next_page
+
+        response = requests.get(url, headers=_self_.headers, params=params).json()
+
+        if response.get("nftSales"):
+            for sale_data in response["nftSales"]:
+                sale = NFTEvent(
+                    transaction_hash=sale_data["transactionHash"],
+                    token_id=sale_data["tokenId"],
+                    contract_address=sale_data["contractAddress"],
+                    event_timestamp=datetime.fromtimestamp(
+                        _self_.timestamp_from_block(sale_data["blockNumber"])
+                    ),
+                    buyer=sale_data["buyerAddress"],
+                    block_number=sale_data["blockNumber"],
+                    seller=sale_data["sellerAddress"],
+                    price_val=sale_data["sellerFee"]["amount"],
+                    quantity=int(sale_data["quantity"]),
+                    price_currency=sale_data["sellerFee"]["symbol"],
+                    price_decimals=sale_data["sellerFee"]["decimals"],
+                    event_type="sale",
+                    collection_slug=collection_slug,
+                    game_id=game_id,
+                    marketplace=sale_data["marketplace"],
+                    marketplace_address=sale_data["marketplaceAddress"],
+                )
+                db.add(sale)
+                db.commit()
+
+            next_page = response.get("pageKey")
+            print(f"Next page: {next_page}")
+
+            if next_page is not None:
+                self.save_all_nft_sales_for_contract(
+                    db,
+                    contract_address,
+                    collection_slug,
+                    game_id,
+                    from_block,
+                    next_page,
+                    chain,
+                )
+        else:
+            db.close()
+            print(f"No more NFT sales found for contract {contract_address}.")
+
     def get_nft_transfers(
         self,
         contract_address: str,
@@ -168,6 +240,115 @@ class Alchemy:
                     transfers.append(transfer)
 
         return {"transfers": transfers, "next_page": response["result"]["pageKey"]}
+
+    def save_all_nft_transfers_for_contract(
+        self,
+        db: Session,
+        contract_address: str,
+        collection_slug: str,
+        game_id: str,
+        from_block: int = 0,
+        per_page: int = 1000,
+        chain: str = "eth-mainnet",
+        next_page: str = "start",
+    ):
+        assert (
+            chain in _self_.supported_chains
+        ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+
+        max_count = hex(per_page)
+        from_block = hex(from_block)
+        category = ["erc721", "erc1155", "specialnft"]
+
+        url = _self_.base_url.format(chain=chain) + f"v2/{_self_.api_key}"
+        payload = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "alchemy_getAssetTransfers",
+            "params": [
+                {
+                    "fromBlock": from_block,
+                    "toBlock": "latest",
+                    "contractAddresses": [contract_address],
+                    "category": category,
+                    "withMetadata": True,
+                    "excludeZeroValue": True,
+                    "maxCount": max_count,
+                }
+            ],
+        }
+
+        if next_page != "start":
+            payload["params"][0]["pageKey"] = next_page
+
+        response = requests.post(url, headers=_self_.headers, json=payload).json()
+
+        if response["result"].get("transfers"):
+            for transfer_data in response["result"]["transfers"]:
+                if transfer_data["category"] == "erc721":
+                    transfer = NFTEvent(
+                        transaction_hash=transfer_data["hash"],
+                        token_id=str(int(transfer_data["erc721TokenId"], 16)),
+                        contract_address=transfer_data["rawContract"]["address"],
+                        event_timestamp=datetime.fromisoformat(
+                            transfer_data["metadata"]["blockTimestamp"][:-1]
+                        ),
+                        buyer=transfer_data["to"],
+                        block_number=int(transfer_data["blockNum"], 16),
+                        seller=transfer_data["from"],
+                        price_val="0",
+                        quantity=1,
+                        price_currency=None,
+                        price_decimals=None,
+                        event_type="transfer",
+                        collection_slug=collection_slug,
+                        game_id=game_id,
+                        marketplace=None,
+                        marketplace_address=None,
+                    )
+                    db.add(transfer)
+                    db.commit()
+                elif transfer_data["category"] == "erc1155":
+                    for nft_metadata in transfer_data["erc1155Metadata"]:
+                        transfer = NFTEvent(
+                            transaction_hash=transfer_data["hash"],
+                            token_id=str(int(nft_metadata["tokenId"], 16)),
+                            contract_address=transfer_data["rawContract"]["address"],
+                            event_timestamp=datetime.fromisoformat(
+                                transfer_data["metadata"]["blockTimestamp"][:-1]
+                            ),
+                            buyer=transfer_data["to"],
+                            block_number=int(transfer_data["blockNum"], 16),
+                            seller=transfer_data["from"],
+                            price_val="0",
+                            quantity=int(nft_metadata["value"], 16),
+                            price_currency=None,
+                            price_decimals=None,
+                            event_type="transfer",
+                            collection_slug=collection_slug,
+                            game_id=game_id,
+                            marketplace=None,
+                            marketplace_address=None,
+                        )
+                        db.add(transfer)
+                        db.commit()
+
+            next_page = response["result"].get("pageKey")
+            print(f"Next page: {next_page}")
+
+            if next_page is not None:
+                self.save_all_nft_transfers_for_contract(
+                    db,
+                    contract_address,
+                    collection_slug,
+                    game_id,
+                    from_block,
+                    per_page,
+                    chain,
+                    next_page,
+                )
+        else:
+            print(f"No more NFT transfers found for contract {contract_address}.")
 
     def timestamp_from_block(self, block_num: int, chain: str = "eth-mainnet"):
         assert (
