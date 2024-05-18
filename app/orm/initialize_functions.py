@@ -4,9 +4,11 @@ from api_requests.opensea import OpenSea
 from api_requests.dappradar import get_uaw_from_dappradar
 from api_requests.discord import get_guild_member_count
 from api_requests.twitter import get_user_public_metrics
+from api_requests.alchemy import get_nft_sales, Alchemy
+from api_requests.etherscan import EtherScan
 from models import CollectionDynamic
 
-engine = create_engine(os.environ.get("TIMESCALE_URL"))
+# engine = create_engine(os.environ.get("TIMESCALE_URL"))
 
 
 def initialize_db(sql_files):
@@ -89,9 +91,56 @@ def add_collection_dynamic(
     )
 
 
-def add_game(collection_slug: str, num_pages: int) -> None:
-    opensea = OpenSea()
-    collection_response = opensea.get_collection(collection_slug)
-    nft_response = opensea.get_nfts_for_collection(collection_slug, num_pages)
+def initialize_collection(collection_response, dbengine) -> None:
+    Session = sessionmaker(bind=dbengine)
+    session = Session()
 
-    # TODO NFT Listings, Events, -> get corresponding NFTs
+    session.add(collection_response["collection"])
+    session.add_all(collection_response["fees"])
+    session.add_all(collection_response["contracts"])
+    session.add_all(collection_response["payment_tokens"])
+
+    session.commit()
+    session.close()
+
+
+from sqlalchemy.orm import sessionmaker
+
+
+def add_game(collection_slug: str, num_pages: int, after_date: datetime) -> None:
+    engine = create_engine(os.environ.get("TIMESCALE_URL"))
+    opensea = OpenSea()
+    alchemy = Alchemy()
+    etherscan = EtherScan()
+    # all tables lead to collection
+    collection_response = opensea.get_collection_stats(collection_slug)
+    initialize_collection(
+        collection_response,
+        engine,
+    )
+
+    Session = sessionmaker(bind=dbengine)
+    session = Session()
+
+    opensea.save_all_nfts_for_collection(session, collection_slug)
+    opensea.save_all_nft_listings_for_collection(session, collection_slug)
+    alchemy.save_all_nft_sales_for_contract(
+        db=session,
+        contract_address=collection_response["collection"]["contract_address"],
+        collection_slug=collection_slug,
+        game_id=collection_response["game_id"],
+    )
+    alchemy.save_all_nft_transfers_for_contract(
+        db=session,
+        contract_address=collection_response["collection"]["contract_address"],
+        collection_slug=collection_slug,
+        game_id=collection_response["game_id"],
+    )
+    etherscan.save_erc20_transfers(
+        db=session,
+        contract_address=collection_response["collection"]["contract_address"],
+        after_date=after_date,
+        collection_slug=collection_slug,
+    )
+
+    # TODO NFT OWNERSHIP
