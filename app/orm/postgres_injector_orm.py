@@ -4,9 +4,8 @@ from sqlalchemy import text, func, create_engine, inspect, select
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
-from .models import Collection, CollectionDynamic, Contract, Nft, NftEvent, \
+from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
     NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee
-# from .initialize_functions import initialize_db
 import psycopg2
 import argparse
 from .transform import Mapper

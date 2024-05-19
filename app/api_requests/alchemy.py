@@ -5,11 +5,15 @@ from pprint import pprint
 import argparse
 import time
 from datetime import datetime, date, timedelta
+from sqlmodel import Session
+from .. import keys
+from ..orm.models import NFT, NFTEvent
 # from utils import append_data_to_file
 
 class Alchemy:
     def __init__(self):
         self.api_key = os.environ.get("ALCHEMY_API_KEY")
+        self.api_key = keys.alchemy_api_key
         self.base_url = "https://{chain}.g.alchemy.com/"
         self.headers = {"accept": "application/json"}
         self.supported_chains = [
@@ -86,11 +90,11 @@ class Alchemy:
         chain: str = "eth-mainnet",
     ):
         assert (
-            chain in _self_.supported_chains
+            chain in self.supported_chains
         ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
 
         url = (
-            _self_.base_url.format(chain=chain) + f"nft/v3/{_self_.api_key}/getNFTSales"
+            self.base_url.format(chain=chain) + f"nft/v3/{self.api_key}/getNFTSales"
         )
         params = {
             "contractAddress": contract_address,
@@ -103,7 +107,7 @@ class Alchemy:
         if next_page != "start":
             params["pageKey"] = next_page
 
-        response = requests.get(url, headers=_self_.headers, params=params).json()
+        response = requests.get(url, headers=self.headers, params=params).json()
 
         if response.get("nftSales"):
             for sale_data in response["nftSales"]:
@@ -112,7 +116,7 @@ class Alchemy:
                     token_id=sale_data["tokenId"],
                     contract_address=sale_data["contractAddress"],
                     event_timestamp=datetime.fromtimestamp(
-                        _self_.timestamp_from_block(sale_data["blockNumber"])
+                        self.timestamp_from_block(sale_data["blockNumber"])
                     ),
                     buyer=sale_data["buyerAddress"],
                     block_number=sale_data["blockNumber"],
@@ -252,14 +256,14 @@ class Alchemy:
         next_page: str = "start",
     ):
         assert (
-            chain in _self_.supported_chains
+            chain in self.supported_chains
         ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
 
         max_count = hex(per_page)
         from_block = hex(from_block)
         category = ["erc721", "erc1155", "specialnft"]
 
-        url = _self_.base_url.format(chain=chain) + f"v2/{_self_.api_key}"
+        url = self.base_url.format(chain=chain) + f"v2/{self.api_key}"
         payload = {
             "id": 1,
             "jsonrpc": "2.0",
@@ -280,7 +284,7 @@ class Alchemy:
         if next_page != "start":
             payload["params"][0]["pageKey"] = next_page
 
-        response = requests.post(url, headers=_self_.headers, json=payload).json()
+        response = requests.post(url, headers=self.headers, json=payload).json()
 
         if response["result"].get("transfers"):
             for transfer_data in response["result"]["transfers"]:

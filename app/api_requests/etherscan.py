@@ -7,13 +7,16 @@ import time
 from datetime import datetime, date, timedelta
 from orm.models import ERC20Transfer
 from sqlmodel import create_engine, Session
+from .. import keys
 
 
 class EtherScan:
     def __init__(self):
 
         self.api_key = os.environ.get("ETHERSCAN_API_KEY")
-        self.base_url = os.environ.get("ETHERSCAN_BASE_URL")
+        # self.base_url = os.environ.get("ETHERSCAN_BASE_URL")
+        self.api_key = keys.etherscan_api_key
+        self.base_url = 'https://api.etherscan.io/api/'
         self.headers = {
             "accept": "application/json",
         }

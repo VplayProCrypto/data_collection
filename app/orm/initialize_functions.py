@@ -1,15 +1,19 @@
 import os
 from sqlmodel import create_engine, Session
+from sqlalchemy.orm import sessionmaker
 from api_requests.opensea import OpenSea
+from datetime import datetime
 from api_requests.dappradar import get_uaw_from_dappradar
 from api_requests.discord import get_guild_member_count
 from api_requests.twitter import get_user_public_metrics
-from api_requests.alchemy import get_nft_sales, Alchemy
+from api_requests.alchemy import Alchemy
 from api_requests.etherscan import EtherScan
 from models import CollectionDynamic
+from .. import keys
 
 # engine = create_engine(os.environ.get("TIMESCALE_URL"))
-
+engine = create_engine(keys.timescale_url)
+# opensea = OpenSea()
 
 def initialize_db(sql_files):
     with Session(engine) as session:
@@ -29,6 +33,7 @@ def rank_social(site: str, followers: int) -> float:
 # for now since we can't get social data we need to manually input it when updating
 def add_collection_dynamic(
     collection_slug: str,
+    opensea: OpenSea,
     twitter_followers=-1,
     facebook_followers=-1,
     instagram_followers=-1,
@@ -49,7 +54,7 @@ def add_collection_dynamic(
         volume=collection_stats["volume"],
         floor_price=collection_stats["floor_price"],
         floor_price_currency=collection_stats["floor_price_currency"],
-        average_price=collection_response["average_price"],
+        average_price=collection_stats["average_price"],
         monthly_uaw=get_uaw_from_dappradar("9495", "30d"),
         daily_uaw=get_uaw_from_dappradar("9495", "24h"),
         discord_users=discord_users,
@@ -104,7 +109,6 @@ def initialize_collection(collection_response, dbengine) -> None:
     session.close()
 
 
-from sqlalchemy.orm import sessionmaker
 
 
 def add_game(collection_slug: str, num_pages: int, after_date: datetime) -> None:
@@ -113,13 +117,13 @@ def add_game(collection_slug: str, num_pages: int, after_date: datetime) -> None
     alchemy = Alchemy()
     etherscan = EtherScan()
     # all tables lead to collection
-    collection_response = opensea.get_collection_stats(collection_slug)
+    collection_response = opensea.get_collection(collection_slug)
     initialize_collection(
         collection_response,
         engine,
     )
 
-    Session = sessionmaker(bind=dbengine)
+    Session = sessionmaker(bind=engine)
     session = Session()
 
     opensea.save_all_nfts_for_collection(session, collection_slug)
@@ -144,3 +148,16 @@ def add_game(collection_slug: str, num_pages: int, after_date: datetime) -> None
     )
 
     # TODO NFT OWNERSHIP
+
+def init_db_new():
+    sql_dir = '../db/raw_sql'
+    sql_files = [os.path.join(sql_dir, 'drop_tables.sql')] + [os.path.join(sql_dir, i) for i in os.listdir(sql_dir) if 'drop' not in i]
+    with Session(engine) as session:
+        for sql_file in sql_files:
+            with open(sql_file, "r") as file:
+                sql = file.read()
+                session.execute(sql)
+        session.commit()
+    collections = ['the-sandbox', 'decentraland', 'mavia-land']
+    for i in collections:
+        add_game(i)

@@ -5,27 +5,33 @@ from pprint import pprint
 import argparse
 import time
 from datetime import datetime, date, timedelta
-from orm.models import Collection, Fee, Contract, NFT
+from sqlmodel import Session
+from orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
+from .. import keys
 
 
 class OpenSea:
     # class to consume the open sea API
     def __init__(self, chain: str = None):
         # :params chain: chain to search for. Default = None for searching all chains
-        self.base_url = os.environ.get('OPENSEA_BASE_URL')
+        # self.base_url = os.environ.get('OPENSEA_BASE_URL')
+        self.base_url = 'https://api.opensea.io/api/v2/'
         self.headers = {
             "accept": "application/json",
-            "x-api-key": os.environ.get("OPENSEA_API_KEY"),
+            # "x-api-key": os.environ.get("OPENSEA_API_KEY"),
+            'x-api-key': keys.opensea_api_key
         }
+        self.games = json.load(open('../../games.json'))
+        print(self.games)
         self.chain = chain
 
-    def get_game_name(collection_slug: str, games: dict) -> str:
+    def get_game_name(self, collection_slug: str, games: dict) -> str:
         for game_id in games.keys():
             if game_id in collection_slug:
                 return games[game_id]
         return ""
 
-    def get_game_id(collection_slug: str, games: dict) -> str:
+    def get_game_id(self, collection_slug: str, games: dict) -> str:
         for game_id in games.keys():
             if game_id in collection_slug:
                 return game_id
@@ -47,8 +53,8 @@ class OpenSea:
         collection = Collection(
             opensea_slug=collection_data["collection"],
             name=collection_data["name"],
-            game_name=get_game_name(collection_data["collection"], self.games),
-            game_id=get_game_id(collection_data["collection"], self.games),
+            game_name=self.get_game_name(collection_data["collection"], self.games),
+            game_id=self.get_game_id(collection_data["collection"], self.games),
             description=collection_data["description"],
             owner=collection_data["owner"],
             category=collection_data["category"],
@@ -82,7 +88,7 @@ class OpenSea:
         ]
 
         payment_tokens = [
-            PaymentTokens(
+            PaymentToken(
                 collection_slug=collection_slug,
                 contract_address=payment_token_data["contract_address"],
                 symbol=payment_token_data["symbol"],
@@ -107,20 +113,20 @@ class OpenSea:
         # should be enough to get all nfts and not crash our database
         pages: int = 100000,
     ):
-        url = _self_.base_url + f"collection/{collection_slug}/nfts"
+        url = self.base_url + f"collection/{collection_slug}/nfts"
         params = {}
 
         if next_page != "start":
             params["next"] = next_page
 
-        response: dict = requests.get(url, params=params, headers=_self_.headers).json()
+        response: dict = requests.get(url, params=params, headers=self.headers).json()
 
         if response.get("nfts"):
             for nft_data in response["nfts"]:
                 nft = NFT(
                     collection_slug=nft_data["collection"],
                     token_id=nft_data["identifier"],
-                    game_id=get_game_id(nft_data["collection"], _self_.games),
+                    game_id=self.get_game_id(nft_data["collection"], self.games),
                     contract_address=nft_data["contract"],
                     name=nft_data["name"],
                     description=nft_data["description"],
@@ -154,13 +160,13 @@ class OpenSea:
         collection_slug: str,
         next_page: str = "start",
     ):
-        url = _self_.base_url + f"listings/collection/{collection_slug}/all"
+        url = self.base_url + f"listings/collection/{collection_slug}/all"
         params = {}
 
         if next_page != "start":
             params["next"] = next_page
 
-        response: dict = requests.get(url, params=params, headers=_self_.headers).json()
+        response: dict = requests.get(url, params=params, headers=self.headers).json()
 
         if response.get("listings"):
             for listing_data in response["listings"]:
@@ -169,7 +175,7 @@ class OpenSea:
                     token_id=listing_data["token_id"],
                     contract_address=listing_data["contract_address"],
                     collection_slug=collection_slug,
-                    game_id=get_game_id(collection_slug, _self_.games),
+                    game_id=self.get_game_id(collection_slug, self.games),
                     seller=listing_data["seller"],
                     price_val=listing_data.get("price", {}).get("value"),
                     price_currency=listing_data.get("price", {}).get("currency"),
@@ -242,7 +248,7 @@ class OpenSea:
                         NFT(
                             collection_slug=nft["collection"],
                             token_id=nft["identifier"],
-                            game_id=get_game_id(nft["collection"], self.games),
+                            game_id=self.get_game_id(nft["collection"], self.games),
                             contract_address=nft["contract"],
                             name=nft["name"],
                             description=nft["description"],
