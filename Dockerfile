@@ -7,6 +7,8 @@ WORKDIR /app
 COPY requirements.txt ./
 
 RUN --mount=type=cache,target=/root/.cache/pip \
+    apt-get update && \
+    apt-get install -y gcc python3-dev && \
     pip install -r requirements.txt
 
 COPY ./app ./app
