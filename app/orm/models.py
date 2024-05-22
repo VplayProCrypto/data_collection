@@ -178,7 +178,7 @@ class NftOwnership(SQLModel, table=True):
     __tablename__ = "nft_ownership"
 
     buyer: Optional[str]
-    seller: str
+    seller: str = Field(primary_key=True)
     token_id: str = Field(primary_key=True)
     contract_address: str = Field(primary_key=True)
     transaction_hash: str

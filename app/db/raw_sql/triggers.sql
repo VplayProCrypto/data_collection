@@ -37,7 +37,7 @@ begin
 
     if total_quantity > new.quantity then
         insert into nft_ownership (token_id, contract_address, seller, buyer, buy_time, sell_time, collection_slug, transaction_hash, game_id, quantity)
-        values (prev_rec.token_id, prev_rec.contract_address, prev_rec.seller, prev_rec.buyer, prev_rec.buy_time,
+        values (prev_rec.token_id, prev_rec.contract_address, null, prev_rec.buyer, new.event_timestamp,
                 null, prev_rec.collection_slug, prev_rec.transaction_hash, prev_rec.game_id, total_quantity - new.quantity);
     end if;
     return new;

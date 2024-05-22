@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS public.token_price
 CREATE TABLE IF NOT EXISTS public.nft_ownership
 (
     buyer character varying,
-    seller character varying not null,
+    seller character varying,
     token_id character varying not null,
     contract_address character varying not null,
     transaction_hash character varying not null,

@@ -85,12 +85,12 @@ class Injector:
 
 
     def bulk_insert(self, new_data: List[dict], model, upsert: bool = False):
-        t = time()
+        t = time.time()
         with Session(self.engine) as session:
             try:
                 session.execute(self.get_insert_smt(new_data, model, upsert))
                 session.commit()
-                print(f'Time Taken: {time() - t}')
+                print(f'Time Taken to insert: {time.time() - t}')
             except ProgrammingError as e:
                 if isinstance(e.orig, psycopg2.errors.InFailedSqlTransaction):
                     # Rollback the session to exit the aborted state
@@ -99,7 +99,7 @@ class Injector:
                     without_duplicates = self._remove_duplicates(new_data, index_columns)
                     session.execute(self.get_insert_smt(without_duplicates, model, upsert))
                     session.commit()
-                    print(f'Time Taken: {time() - t}')
+                    print(f'Time Taken to insert: {time.time() - t}')
                 else:
                     raise e
             except SQLAlchemyError as e:
@@ -161,7 +161,6 @@ class Injector:
                     print("All nfts retirved")
                     return
                 try:
-                    t = time.time()
                     self.bulk_insert(r['nfts'], NFT)
                     self._save_next_page(next_page_file, next_pages)
                     saved_pages += len(next_pages)
@@ -194,25 +193,45 @@ class Injector:
                 break
 
 
-    def insert_nft_events(self, collection_slug: str):
+    def insert_nft_events(self, collection_slug: str, event_type: str = 'transfer'):
         with Session(self.engine) as session:
             last_event = session.execute(select(NFTEvent).where(NFTEvent.collection_slug == collection_slug)\
                                         .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
+            collection: Collection = session.execute(
+                select(Collection)
+                .where(Collection.opensea_slug == collection_slug)
+                .limit(1)
+            ).scalars().first()
+            contracts = [i.model_dump() for i in collection.contracts]
+        
+        print(contracts)
         if last_event is None:
             print("no event for this collection found in db. retreving hstory")
             # self.insert_nft_events_history(collection_slug)
-            with Session(self.engine) as session:
-                after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
+            # with Session(self.engine) as session:
+                # after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
+            from_block = 0
         else:
-            after_date = last_event.event_timestamp
+            from_block = last_event.block_number
         next_page = None
+        if event_type == 'sale':
+            per_page = 10
+        else:
+            per_page = 1000
         while True:
-            res = self.mapper.get_nft_events_for_collection(collection_slug, after_date = after_date, max_recs = 10000, next_page=next_page)
+            res = self.mapper.get_nft_events_for_collection(collection_slug, from_block = from_block, per_page = per_page, next_page=next_page, contracts = contracts, event_type = event_type)
+            # print(res['events'][0])
             try:
                 self.bulk_insert(res['events'], NFTEvent)
                 next_page = res['next_page']
+                print('Added:', len(res['events']))
             except Exception as e:
                 print("unable to insert. Skipping entire block")
+                print(e)
+                break
+            finally:
+                if not next_page:
+                    break
     
     def insert_erc20_transfers(self, collection_slug: str):
         # etherscan = EtherScan()
@@ -237,10 +256,10 @@ class Injector:
                             .where(Collection.opensea_slug == collection_slug)
                             .limit(1)
                         ).scalars().first()
-                print(after_date, 'last record:', last_record)
-                t = time()
+                print('retreiving after:', after_date, 'last record:', last_record)
+                t = time.time()
                 transfers = self.mapper.get_erc20_transfers(erc_contract, after_date, collection_slug)
-                print(f'Retrival time: {time() - t} seconds')
+                print(f'Retrival time: {time.time() - t} seconds')
                 if len(transfers) == 0:
                     # pprint()
                     break
@@ -268,9 +287,10 @@ def main():
     # injector.raw_sql('./app/db/raw_sql/compressions.sql')
     # initialize_db()
     injector.insert_collection(args['slug'])
-    injector.insert_nfts(args['slug'], num_pages=3)
-    injector.insert_nft_events(args['slug'])
-    injector.insert_erc20_transfers(args['slug'])
+    injector.insert_nfts(args['slug'])
+    injector.insert_nft_events(args['slug'], event_type='transfer')
+    injector.insert_nft_events(args['slug'], event_type='sale')
+    # injector.insert_erc20_transfers(args['slug'])
 
 if __name__ == "__main__":
     main()

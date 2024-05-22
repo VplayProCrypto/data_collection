@@ -30,6 +30,36 @@ class Alchemy:
         from_block: int = 0,
         next_page: str | None = None,
         chain: str = "eth-mainnet",
+        per_page: int = 1000
+    ):
+        assert (
+            chain in self.supported_chains
+        ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+
+        url = self.base_url.format(chain=chain) + f"nft/v3/{self.api_key}/getNFTSales"
+
+        params = {
+            "contractAddress": contract_address,
+            "taker": "BUYER",
+            "fromBlock": from_block,
+            "order": "asc",
+            "limit": per_page,
+        }
+
+        if next_page:
+            params["pageKey"] = next_page
+
+        response = requests.get(url, headers=self.headers, params=params).json()
+        
+
+        return {"sales": response['nftSales'], "next_page": response["pageKey"]}
+    
+    def get_nft_sales_new(
+        self,
+        contract_address: str,
+        from_block: int = 0,
+        next_page: str | None = None,
+        chain: str = "eth-mainnet",
         per_page: int = 1000,
         collection_slug: str = "",
         game_id: str = "",
@@ -160,6 +190,48 @@ class Alchemy:
         print(f"No more NFT sales found for contract {contract_address}.")
 
     def get_nft_transfers(
+        self,
+        contract_address: str,
+        from_block: int = 0,
+        per_page: int = 1000,
+        chain: str = "eth-mainmet",
+        next_page: str | None = None
+    ):
+        assert (
+            chain in self.supported_chains
+        ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+
+        max_count = hex(per_page)
+        from_block_hex = hex(from_block)
+        category = ["erc721", "erc1155", "specialnft"]
+
+        url = self.base_url.format(chain=chain) + f"v2/{self.api_key}"
+
+        payload = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "alchemy_getAssetTransfers",
+            "params": [
+                {
+                    "fromBlock": from_block_hex,
+                    "toBlock": "latest",
+                    "contractAddresses": [contract_address],
+                    "category": category,
+                    "withMetadata": True,
+                    "excludeZeroValue": True,
+                    "maxCount": max_count,
+                }
+            ],
+        }
+
+        if next_page:
+            payload["params"][0]["pageKey"] = next_page
+
+        response = requests.post(url, headers=self.headers, json=payload).json()
+        # pprint(response['result']['transfers'][0])
+        return {"transfers": response['result']['transfers'], "next_page": response["result"]["pageKey"]}
+    
+    def get_nft_transfers_new(
         self,
         contract_address: str,
         from_block: int = 0,

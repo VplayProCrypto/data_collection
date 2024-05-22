@@ -257,6 +257,7 @@ class Mapper:
     
     def get_collection(self, collection_slug: str):
         collection_data = self.opensea.get_collection(collection_slug)
+        # pprint(collection_data)
         collection = self.map_opensea_collection(collection_data)
         fees = [self.map_opensea_fee(i, collection_slug) for i in collection_data['fees']]
         contracts = [self.map_opensea_contract(i, collection_slug) for i in collection_data['contracts']]
@@ -285,11 +286,12 @@ class Mapper:
         else:
             raise ValueError(f"Invalid chain: {chain}")
     
-    def get_nft_events_for_collection(self, collection_slug: str, game_id: str, contracts: list[dict], from_block: int, event_type: str = 'transfer', max_recs: int = 1000, next_page: str | None = None):
+    def get_nft_events_for_collection(self, collection_slug: str, contracts: list[dict], from_block: int, event_type: str = 'transfer', per_page: int = 1000, next_page: str | None = None):
+        game_id = self._get_game_id(collection_slug)
         if event_type == 'sale':
             for ca in contracts:
                 # pprint(ca)
-                r = self.alchemy.get_nft_sales(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=max_recs)
+                r = self.alchemy.get_nft_sales(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=per_page)
                 events = r['sales']
                 # print(len(events))
             events_mapped = [self.map_alchemy_nft_sale(i, collection_slug, game_id) for i in events]
@@ -299,8 +301,8 @@ class Mapper:
             }
         if event_type == 'transfer':
             for ca in contracts:
-                pprint(ca)
-                r = self.alchemy.get_nft_transfers(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=max_recs)
+                # pprint(ca)
+                r = self.alchemy.get_nft_transfers(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=per_page)
                 events = r['transfers']
             events_mapped = [self.map_alchemy_nft_transfer(i, collection_slug, game_id) for i in events]
             return {
@@ -324,23 +326,24 @@ class Mapper:
 def main():
     collection_slug = 'the-sandbox-assets'
     mapper = Mapper()
-    # collection = mapper.get_collection(collection_slug)
-    # nfts = mapper.get_nfts_for_collection(collection_slug, 2)
-    # pprint(collection)
+    collection = mapper.get_collection(collection_slug)
+    nfts = mapper.get_nfts_for_collection(collection_slug, 2)
+    pprint(collection)
+    pprint(collection['contracts'])
     # contracts = [mapper.map_opensea_contract(i, collection_slug) for i in collection['contracts']]
-    # e = mapper.get_nft_events_for_collection(collection_slug, 'abcd', contracts = collection['contracts'],
-    #                                          from_block=0, event_type = 'transfer',
-    #                                          max_recs = 100)['events']
-    t = mapper.get_erc20_transfers(contract_address = '0x3845badAde8e6dFF049820680d1F14bD3903a5d0', after_date = datetime.now() - timedelta(days = 1), collection_slug = collection_slug)
+    e = mapper.get_nft_events_for_collection(collection_slug, contracts = collection['contracts'],
+                                             from_block=0, event_type = 'sale',
+                                             max_recs = 100)['events']
+    # t = mapper.get_erc20_transfers(contract_address = '0x3845badAde8e6dFF049820680d1F14bD3903a5d0', after_date = datetime.now() - timedelta(days = 1), collection_slug = collection_slug)
     # pprint(len(nfts['nfts']))
     # pprint(nfts['next_pages'])
-    # pprint(len(e))
-    # a = [i for i in e if i['quantity'] > 1]
-    # pprint(a[0])
-    # pprint(e[1])
-    # pprint(e[2])
-    pprint(len(t))
-    pprint(t[0])
+    pprint(len(e))
+    a = [i for i in e if i['quantity'] > 1]
+    pprint(a[0])
+    pprint(e[1])
+    pprint(e[2])
+    # pprint(len(t))
+    # pprint(t[0])
 
 if __name__ == "__main__":
     main()
