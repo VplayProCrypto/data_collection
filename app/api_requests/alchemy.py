@@ -101,55 +101,63 @@ class Alchemy:
             "taker": "BUYER",
             "fromBlock": from_block,
             "order": "asc",
-            "limit": 1000,
+            "limit": 2,
         }
 
+        i = 0
         if next_page != "start":
             params["pageKey"] = next_page
 
-        response = requests.get(url, headers=self.headers, params=params).json()
 
-        if response.get("nftSales"):
-            for sale_data in response["nftSales"]:
-                sale = NFTEvent(
-                    transaction_hash=sale_data["transactionHash"],
-                    token_id=sale_data["tokenId"],
-                    contract_address=sale_data["contractAddress"],
-                    event_timestamp=datetime.fromtimestamp(
-                        self.timestamp_from_block(sale_data["blockNumber"])
-                    ),
-                    buyer=sale_data["buyerAddress"],
-                    block_number=sale_data["blockNumber"],
-                    seller=sale_data["sellerAddress"],
-                    price_val=sale_data["sellerFee"]["amount"],
-                    quantity=int(sale_data["quantity"]),
-                    price_currency=sale_data["sellerFee"]["symbol"],
-                    price_decimals=sale_data["sellerFee"]["decimals"],
-                    event_type="sale",
-                    collection_slug=collection_slug,
-                    game_id=game_id,
-                    marketplace=sale_data["marketplace"],
-                    marketplace_address=sale_data["marketplaceAddress"],
-                )
-                db.add(sale)
+        while True:
+            response: dict = requests.get(url, headers=self.headers, params=params).json()
+            if response.get("nftSales"):
+                for sale_data in response["nftSales"]:
+                    # print(datetime.fromtimestamp(self.timestamp_from_block(sale_data["blockNumber"])))
+                    db.add(NFTEvent(
+                        transaction_hash=sale_data["transactionHash"],
+                        token_id=sale_data["tokenId"],
+                        contract_address=sale_data["contractAddress"],
+                        event_timestamp=datetime.fromtimestamp(
+                            self.timestamp_from_block(sale_data["blockNumber"])
+                        ),
+                        buyer=sale_data["buyerAddress"],
+                        block_number=sale_data["blockNumber"],
+                        seller=sale_data["sellerAddress"],
+                        price_val=sale_data["sellerFee"]["amount"],
+                        quantity=int(sale_data["quantity"]),
+                        price_currency=sale_data["sellerFee"]["symbol"],
+                        price_decimals=sale_data["sellerFee"]["decimals"],
+                        event_type="sale",
+                        collection_slug=collection_slug,
+                        game_id=game_id,
+                        marketplace=sale_data["marketplace"],
+                        marketplace_address=sale_data["marketplaceAddress"],
+                    ))
+                    # print('-'*100)
+                    # print('save nft sale')
+                    # print(sale.event_timestamp)
+                    # print('-'*100)
                 db.commit()
+                i += 1
+                next_page = response.get("pageKey")
+                params["pageKey"] = next_page
+                print(f"Next page: {next_page}. Total saved: {i * 2}")
+                if not next_page or not response.get('nftSales'):
+                    break
 
-            next_page = response.get("pageKey")
-            print(f"Next page: {next_page}")
-
-            if next_page is not None:
-                self.save_all_nft_sales_for_contract(
-                    db,
-                    contract_address,
-                    collection_slug,
-                    game_id,
-                    from_block,
-                    next_page,
-                    chain,
-                )
-        else:
-            db.close()
-            print(f"No more NFT sales found for contract {contract_address}.")
+            # if next_page:
+            #     self.save_all_nft_sales_for_contract(
+            #         db,
+            #         contract_address,
+            #         collection_slug,
+            #         game_id,
+            #         from_block,
+            #         next_page,
+            #         chain,
+            #     )
+        db.close()
+        print(f"No more NFT sales found for contract {contract_address}.")
 
     def get_nft_transfers(
         self,
@@ -260,7 +268,7 @@ class Alchemy:
         ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
 
         max_count = hex(per_page)
-        from_block = hex(from_block)
+        # from_block_hex = hex(from_block)
         category = ["erc721", "erc1155", "specialnft"]
 
         url = self.base_url.format(chain=chain) + f"v2/{self.api_key}"
@@ -270,7 +278,7 @@ class Alchemy:
             "method": "alchemy_getAssetTransfers",
             "params": [
                 {
-                    "fromBlock": from_block,
+                    "fromBlock": hex(from_block),
                     "toBlock": "latest",
                     "contractAddresses": [contract_address],
                     "category": category,
@@ -310,7 +318,7 @@ class Alchemy:
                         marketplace_address=None,
                     )
                     db.add(transfer)
-                    db.commit()
+                # db.commit()
                 elif transfer_data["category"] == "erc1155":
                     for nft_metadata in transfer_data["erc1155Metadata"]:
                         transfer = NFTEvent(
@@ -334,7 +342,7 @@ class Alchemy:
                             marketplace_address=None,
                         )
                         db.add(transfer)
-                        db.commit()
+            db.commit()
 
             next_page = response["result"].get("pageKey")
             print(f"Next page: {next_page}")
@@ -365,8 +373,13 @@ class Alchemy:
             "params": [hex(block_num), False],
         }
         r = requests.post(url, headers=self.headers, json=payload).json()
+        t = int(r["result"]["timestamp"], 16)
+        # print('-'*100)
+        # print('timestamp from block')
+        # print(t)
         # pprint(r)
-        return int(r["result"]["timestamp"], 16)
+        # print('-'*100)
+        return t
 
     def _map_chain_to_alchemy_chain(self, chain: str):
         chain_mapping = {
@@ -378,3 +391,6 @@ class Alchemy:
         if alchemy_chain is None:
             raise ValueError(f"Invalid chain: {chain}")
         return alchemy_chain
+
+def main():
+    blockn = 102948

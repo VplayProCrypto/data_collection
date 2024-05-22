@@ -56,3 +56,9 @@ def unflatten_nested_lists(l: list):
 
 # print(unflatten_nested_lists([1, 2, [3, 4], 5, [6, 7, 8], 9]))
 # print(unflatten_nested_lists([{1:1}, {1:1}, [{1:1}, {1:1}, {1:1}], {1:1}, {1:1}]))
+
+def get_game_id(collection_slug: str, games: dict) -> str:
+    for game_id in games.keys():
+        if game_id in collection_slug:
+            return game_id
+    return ""

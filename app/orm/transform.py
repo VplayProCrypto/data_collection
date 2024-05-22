@@ -11,7 +11,7 @@ from ..utils import unflatten_nested_lists
 class Mapper:
     def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "app/games.json"):
         self.opensea = OpenSea()
-        self.ethscan = EtherScan(eth_api_key)
+        self.ethscan = EtherScan()
         self.alchemy = Alchemy()
         
         with open(game_names_file) as f:
@@ -35,6 +35,7 @@ class Mapper:
         collection_slug = collection_data['collection']
         game_name = self._get_game_name(collection_slug)
         game_id = self._get_game_id(collection_slug)
+        # pprint(collection_data)
         return {
             'opensea_slug': collection_data['collection'],
             'name': collection_data['name'],
@@ -51,7 +52,7 @@ class Mapper:
             'telegram_url': collection_data['telegram_url'],
             'twitter_url': collection_data['twitter_username'],
             'instagram_url': collection_data['instagram_username'],
-            'created_date': collection_data['created_date']
+            'created_date': datetime.fromisoformat(collection_data['created_date'])
         }
     
     def map_opensea_nft_event(self, event_data: dict):
@@ -314,28 +315,32 @@ class Mapper:
     
     def get_erc20_transfers(self, contract_address: str, after_date: datetime, collection_slug: str):
         transfers = self.ethscan.get_erc20_transfers(contract_address, after_date)
+        # print('-'*50)
+        # print('inside mapper erc20')
+        # pprint(transfers[0])
+        # print('-'*50)
         return [self.map_etherscan_erc20_transfer(i, collection_slug) for i in transfers]
 
 def main():
     collection_slug = 'the-sandbox-assets'
     mapper = Mapper()
-    collection = mapper.get_collection(collection_slug)
+    # collection = mapper.get_collection(collection_slug)
     # nfts = mapper.get_nfts_for_collection(collection_slug, 2)
     # pprint(collection)
     # contracts = [mapper.map_opensea_contract(i, collection_slug) for i in collection['contracts']]
-    e = mapper.get_nft_events_for_collection(collection_slug, 'abcd', contracts = collection['contracts'],
-                                             from_block=0, event_type = 'transfer',
-                                             max_recs = 100)['events']
+    # e = mapper.get_nft_events_for_collection(collection_slug, 'abcd', contracts = collection['contracts'],
+    #                                          from_block=0, event_type = 'transfer',
+    #                                          max_recs = 100)['events']
     t = mapper.get_erc20_transfers(contract_address = '0x3845badAde8e6dFF049820680d1F14bD3903a5d0', after_date = datetime.now() - timedelta(days = 1), collection_slug = collection_slug)
     # pprint(len(nfts['nfts']))
     # pprint(nfts['next_pages'])
-    pprint(len(e))
-    a = [i for i in e if i['quantity'] > 1]
-    pprint(a[0])
+    # pprint(len(e))
+    # a = [i for i in e if i['quantity'] > 1]
+    # pprint(a[0])
     # pprint(e[1])
     # pprint(e[2])
-    # pprint(len(t))
-    # pprint(t[0])
+    pprint(len(t))
+    pprint(t[0])
 
 if __name__ == "__main__":
     main()

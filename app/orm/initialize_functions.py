@@ -1,14 +1,17 @@
 import os
 from sqlmodel import create_engine, Session
 from sqlalchemy.orm import sessionmaker
-from api_requests.opensea import OpenSea
+from sqlalchemy import text
 from datetime import datetime
-from api_requests.dappradar import get_uaw_from_dappradar
-from api_requests.discord import get_guild_member_count
-from api_requests.twitter import get_user_public_metrics
-from api_requests.alchemy import Alchemy
-from api_requests.etherscan import EtherScan
-from models import CollectionDynamic
+import json
+from .models import CollectionDynamic
+from ..api_requests.dappradar import get_uaw_from_dappradar
+from ..api_requests.discord import get_guild_member_count
+from ..api_requests.twitter import get_user_public_metrics
+from ..api_requests.alchemy import Alchemy
+from ..api_requests.etherscan import EtherScan
+from ..api_requests.opensea import OpenSea
+from .postgres_injector_orm import Injector
 from .. import keys
 
 # engine = create_engine(os.environ.get("TIMESCALE_URL"))
@@ -111,53 +114,114 @@ def initialize_collection(collection_response, dbengine) -> None:
 
 
 
-def add_game(collection_slug: str, num_pages: int, after_date: datetime) -> None:
-    engine = create_engine(os.environ.get("TIMESCALE_URL"))
+def add_game(collection_slug: str, num_pages: int = 10000) -> None:
+    # engine = create_engine(os.environ.get("TIMESCALE_URL"))
+    with open('app/games.json') as f:
+        games = json.loads(f.read())
+    engine = create_engine(keys.timescale_url)
     opensea = OpenSea()
     alchemy = Alchemy()
     etherscan = EtherScan()
     # all tables lead to collection
-    collection_response = opensea.get_collection(collection_slug)
+    collection_response = opensea.get_collection_new(collection_slug)
+    contracts = [i.contract_address for i in collection_response['contracts']]
+    after_date = collection_response['collection'].created_date
+    # print('-'*100)
+    # print('contracts:', contracts)
+    # print('after date:', after_date)
     initialize_collection(
         collection_response,
         engine,
     )
+    # print('contracts:', contracts)
+    # print('after date:', after_date)
+    # print('-'*100)
 
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    # Session = sessionmaker(bind=engine)
+    # session = Session()
 
-    opensea.save_all_nfts_for_collection(session, collection_slug)
-    opensea.save_all_nft_listings_for_collection(session, collection_slug)
-    alchemy.save_all_nft_sales_for_contract(
-        db=session,
-        contract_address=collection_response["collection"]["contract_address"],
-        collection_slug=collection_slug,
-        game_id=collection_response["game_id"],
-    )
-    alchemy.save_all_nft_transfers_for_contract(
-        db=session,
-        contract_address=collection_response["collection"]["contract_address"],
-        collection_slug=collection_slug,
-        game_id=collection_response["game_id"],
-    )
-    etherscan.save_erc20_transfers(
-        db=session,
-        contract_address=collection_response["collection"]["contract_address"],
-        after_date=after_date,
-        collection_slug=collection_slug,
-    )
+    # with Session(engine) as session:
+    #     opensea.save_all_nfts_for_collection(session, collection_slug, pages = num_pages)
+    # with Session(engine) as session:
+    #     opensea.save_all_nft_listings_for_collection(session, collection_slug)
+    # # print('-'*100)
+    # for contract in contracts:
+    #     # print(contract)
+    #     with Session(engine) as session:
+    #         alchemy.save_all_nft_sales_for_contract(
+    #             db=session,
+    #             contract_address=contract,
+    #             collection_slug=collection_slug,
+    #             game_id=collection_response["game_id"],
+    #         )
+    #     with Session(engine) as session:
+    #         alchemy.save_all_nft_transfers_for_contract(
+    #             db=session,
+    #             contract_address=contract,
+    #             collection_slug=collection_slug,
+    #             game_id=collection_response["game_id"],
+    #         )
+    # print('-'*100)
+    
+    for erc_contract in games[collection_response['game_id']]['erc20Tokens']:
+        total_recs_saved = 0
+        while True:
+            transfers = etherscan.get_erc20_transfers_new(erc_contract, after_date, collection_slug)
+            print('-'*50)
+            print('transaction hash:', transfers[41].transaction_hash, 'time:', transfers[37].event_timestamp)
+            print('transaction hash:', transfers[44].transaction_hash, 'time:', transfers[40].event_timestamp)
+            print('-'*50)
+            with Session(engine) as session:
+                if transfers:
+                    after_date = transfers[-1].event_timestamp
+                    for i in transfers:
+                        try:
+                            session.add(i)
+                            total_recs_saved += 1
+                        except Exception as e:
+                            session.rollback()
+                            print('error while adding record. Skipping')
+                            print(f'transaction hash: {i.transaction_hash}')
+                            print('error:', e)
+                    try:
+                        session.commit()
+                    except Exception as e:
+                        session.rollback()
+                        print('error:', e)
+                        break
+                    print('Added records:', total_recs_saved)
+                else:
+                    break
+                # etherscan.save_erc20_transfers(
+                #     db=session,
+                #     contract_address=erc_contract,
+                #     after_date=after_date,
+                #     collection_slug=collection_slug,
+                # )
 
     # TODO NFT OWNERSHIP
 
+def add_collection(collection_slug: str):
+    injector = Injector()
+    injector.insert_collection(collection_slug=collection_slug)
+    injector.insert_nfts(collection_slug=collection_slug, num_pages=10)
+    injector.insert_nft_events_history(collection_slug=collection_slug)
+
 def init_db_new():
-    sql_dir = '../db/raw_sql'
-    sql_files = [os.path.join(sql_dir, 'drop_tables.sql')] + [os.path.join(sql_dir, i) for i in os.listdir(sql_dir) if 'drop' not in i]
+    sql_dir = 'app/db/raw_sql'
+    sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
     with Session(engine) as session:
         for sql_file in sql_files:
             with open(sql_file, "r") as file:
                 sql = file.read()
-                session.execute(sql)
+                session.exec(text(sql))
         session.commit()
-    collections = ['the-sandbox', 'decentraland', 'mavia-land']
+    collections = ['decentraland', 'mavia-land']
     for i in collections:
         add_game(i)
+
+def main():
+    init_db_new()
+
+if __name__ == '__main__':
+    main()

@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.erc20_transfers
 (
     buyer character varying not null,
     seller character varying not null,
-    contract_address character varying not null,
+    contract_address text not null,
     price double precision not null,
     symbol character varying not null,
     decimals integer not null,
@@ -152,11 +152,11 @@ CREATE TABLE IF NOT EXISTS public.nft_events
     price_currency character varying,
     price_decimals character varying,
     event_timestamp timestamp with time zone not null,
-    CONSTRAINT nft_events_pkey primary key (contract_address, token_id, event_timestamp),
-    CONSTRAINT nft_events_token_id_fkey FOREIGN KEY (token_id, contract_address)
-        REFERENCES public.nft (token_id, contract_address) match simple
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    CONSTRAINT nft_events_pkey primary key (contract_address, token_id, event_timestamp)
+    -- CONSTRAINT nft_events_token_id_fkey FOREIGN KEY (token_id, contract_address)
+    --     REFERENCES public.nft (token_id, contract_address) match simple
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS public.token_price
@@ -182,11 +182,11 @@ CREATE TABLE IF NOT EXISTS public.nft_ownership
     sell_time timestamp with time zone,
     collection_slug character varying not null,
     game_id character varying not null,
-    CONSTRAINT nft_ownership_pkey primary key (contract_address, token_id, buy_time),
-    CONSTRAINT nft_ownership_token_id_fkey FOREIGN KEY (token_id, contract_address)
-        REFERENCES public.nft (token_id, contract_address) match simple
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    CONSTRAINT nft_ownership_pkey primary key (contract_address, token_id, buyer, buy_time)
+    -- CONSTRAINT nft_ownership_token_id_fkey FOREIGN KEY (token_id, contract_address)
+    --     REFERENCES public.nft (token_id, contract_address) match simple
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS public.nft_dynamic
@@ -196,11 +196,11 @@ CREATE TABLE IF NOT EXISTS public.nft_dynamic
     contract_address character varying not null,
     rr numeric,
     event_timestamp timestamp with time zone not null default now(),
-    CONSTRAINT nft_dynamic_pk primary key (contract_address, token_id, event_timestamp),
-    CONSTRAINT nft_dynamic_token_id_fkey FOREIGN KEY (token_id, contract_address)
-        REFERENCES public.nft (token_id, contract_address) match simple
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    CONSTRAINT nft_dynamic_pk primary key (contract_address, token_id, event_timestamp)
+    -- CONSTRAINT nft_dynamic_token_id_fkey FOREIGN KEY (token_id, contract_address)
+    --     REFERENCES public.nft (token_id, contract_address) match simple
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS public.nft_offers
@@ -219,11 +219,11 @@ CREATE TABLE IF NOT EXISTS public.nft_offers
     start_date timestamp with time zone,
     expiration_date timestamp with time zone,
     event_timestamp timestamp with time zone not null,
-    CONSTRAINT nft_offers_pkey primary key (contract_address, token_id, event_timestamp),
-    CONSTRAINT nft_offers_token_id_fkey FOREIGN KEY (token_id, contract_address)
-        REFERENCES public.nft (token_id, contract_address) match simple
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    CONSTRAINT nft_offers_pkey primary key (contract_address, token_id, event_timestamp)
+--     CONSTRAINT nft_offers_token_id_fkey FOREIGN KEY (token_id, contract_address)
+--         REFERENCES public.nft (token_id, contract_address) match simple
+--         ON UPDATE NO ACTION
+--         ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS public.nft_listings
@@ -240,9 +240,9 @@ CREATE TABLE IF NOT EXISTS public.nft_listings
     start_date timestamp with time zone,
     expiration_date timestamp with time zone,
     event_timestamp timestamp with time zone not null,
-    CONSTRAINT nft_listings_pkey primary key (contract_address, token_id, event_timestamp),
-    CONSTRAINT nft_listings_token_id_fkey FOREIGN KEY (token_id, contract_address)
-        REFERENCES public.nft (token_id, contract_address) match simple
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+    CONSTRAINT nft_listings_pkey primary key (contract_address, token_id, event_timestamp)
+    -- CONSTRAINT nft_listings_token_id_fkey FOREIGN KEY (token_id, contract_address)
+    --     REFERENCES public.nft (token_id, contract_address) match simple
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
 );

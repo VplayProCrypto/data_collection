@@ -287,7 +287,7 @@ class Mapper:
             }
         if event_type == 'transfer':
             for ca in contracts:
-                pprint(ca)
+                # pprint(ca)
                 r = self.alchemy.get_nft_transfers(ca['contract_address'], from_block, next_page=next_page, chain=self.map_chain_to_alchemy_chain(ca['chain']), per_page=max_recs)
                 events = r['transfers']
             events_mapped = [self.map_alchemy_nft_transfer(i, collection_slug, game_id) for i in events]

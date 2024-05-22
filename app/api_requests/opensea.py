@@ -6,7 +6,7 @@ import argparse
 import time
 from datetime import datetime, date, timedelta
 from sqlmodel import Session
-from orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
+from ..orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
 from .. import keys
 
 
@@ -21,14 +21,14 @@ class OpenSea:
             # "x-api-key": os.environ.get("OPENSEA_API_KEY"),
             'x-api-key': keys.opensea_api_key
         }
-        self.games = json.load(open('../../games.json'))
-        print(self.games)
+        self.games = json.load(open('app/games.json'))
+        # print(self.games)
         self.chain = chain
 
     def get_game_name(self, collection_slug: str, games: dict) -> str:
         for game_id in games.keys():
             if game_id in collection_slug:
-                return games[game_id]
+                return games[game_id]['name']
         return ""
 
     def get_game_id(self, collection_slug: str, games: dict) -> str:
@@ -37,7 +37,23 @@ class OpenSea:
                 return game_id
         return ""
 
-    def get_collection(self, collection_slug) -> dict:
+    def get_collection(self, collection_slug: str) -> dict:
+        """
+        Retrieves the collection metadata for a single collection.
+
+        :param collection_slug: unique OpenSea identifier of the collection to save
+        """
+        assert (
+            isinstance(collection_slug, str) and collection_slug
+        ), "Please specify a collection slug"
+
+        url = self.base_url + f"collections/{collection_slug}"
+        collection_data: dict = requests.get(url, headers=self.headers).json()
+        # pprint(collection_data)
+        return collection_data
+
+
+    def get_collection_new(self, collection_slug) -> dict:
         """
         Saves the collection metadata for a single collection.
 
@@ -48,7 +64,8 @@ class OpenSea:
         ), "Please specify a collection slug"
 
         url = self.base_url + f"collections/{collection_slug}"
-        collection_data = requests.get(url, headers=self.headers).json()
+        collection_data: dict = requests.get(url, headers=self.headers).json()
+        # pprint(collection_data)
 
         collection = Collection(
             opensea_slug=collection_data["collection"],
@@ -66,7 +83,7 @@ class OpenSea:
             telegram_url=collection_data["telegram_url"],
             twitter_url=collection_data["twitter_username"],
             instagram_url=collection_data["instagram_username"],
-            created_date=collection_data["created_date"],
+            created_date=datetime.fromisoformat(collection_data["created_date"]),
         )
 
         fees = [
@@ -87,22 +104,26 @@ class OpenSea:
             for contract_data in collection_data["contracts"]
         ]
 
-        payment_tokens = [
-            PaymentToken(
-                collection_slug=collection_slug,
-                contract_address=payment_token_data["contract_address"],
-                symbol=payment_token_data["symbol"],
-                decimals=payment_token_data["decimals"],
-                chain=payment_token_data["chain"],
-            )
-            for payment_token_data in collection_data["payment_tokens"]
-        ]
+        if collection_data.get('payment_tokens'):
+            payment_tokens = [
+                PaymentToken(
+                    collection_slug=collection_slug,
+                    contract_address=payment_token_data["address"],
+                    symbol=payment_token_data["symbol"],
+                    decimals=payment_token_data["decimals"],
+                    chain=payment_token_data["chain"],
+                )
+                for payment_token_data in collection_data["payment_tokens"]
+            ]
+        else:
+            payment_tokens = []
 
         return {
             "collection": collection,
             "fees": fees,
             "contracts": contracts,
             "payment_tokens": payment_tokens,
+            "game_id": collection.game_id
         }
 
     def save_all_nfts_for_collection(
@@ -113,13 +134,14 @@ class OpenSea:
         # should be enough to get all nfts and not crash our database
         pages: int = 100000,
     ):
+        i = 0
         url = self.base_url + f"collection/{collection_slug}/nfts"
         params = {}
-
         if next_page != "start":
             params["next"] = next_page
 
         response: dict = requests.get(url, params=params, headers=self.headers).json()
+        # pprint(response)
 
         if response.get("nfts"):
             for nft_data in response["nfts"]:
@@ -140,16 +162,16 @@ class OpenSea:
                     updated_at=datetime.fromisoformat(nft_data["updated_at"]),
                 )
                 db.add(nft)
-                db.commit()
+            db.commit()
 
             next_page = response.get("next")
-            print(f"Next page: {next_page}")
+            print(f"Next page: {next_page}. Page number: {pages}")
 
             if next_page is not None and pages > 0:
                 self.save_all_nfts_for_collection(
                     db, collection_slug, next_page, pages - 1
                 )
-
+            i += 1
         else:
             db.close()
             print(f"No more NFTs found for {collection_slug}.")
@@ -209,6 +231,59 @@ class OpenSea:
             print(f"No more NFT listings found for {collection_slug}.")
 
     def get_nfts_for_collection(
+        self,
+        collection_slug: str,
+        num_pages: int,
+        perPage: int = 200,
+        next_page: str = None,
+    ) -> dict:
+        """
+        Saves the NFTs for the given collection in the specified file path.
+
+        :param collection_slug: unique identifier for the collection on OpenSea
+        :param perPage: limit of NFTs to retrieve per request. Limit parameter in the API. Maximum 200
+        :param num_pages: number of pages to retrieve. Only for testing purposes
+        :param next_page: None for JSON save, otherwise SQL files
+        """
+        assert (
+            perPage >= 1 and perPage <= 200
+        ), "Number of results returned per page should be between 1 and 200"
+        assert num_pages >= 1, "Number of pages should be at least one"
+
+        url = self.base_url + f"collection/{collection_slug}/nfts"
+        i = 0
+        nfts = []
+        next_pages = []
+        params = {"limit": perPage}
+
+        while True:
+            if next_page:
+                params["next"] = next_page
+
+            response: dict = requests.get(
+                url, params=params, headers=self.headers
+            ).json()
+
+            if response.get("nfts"):
+                nfts.extend(response['nfts'])
+
+                if response.get("next"):
+                    params["next"] = response["next"]
+                    next_pages.append(response.get("next"))
+                else:
+                    return {"nfts": nfts, "next_pages": next_pages}
+
+            i += 1
+
+            if i >= num_pages or not params.get("next"):
+                break
+
+            next_page = params["next"]
+
+        print(f"Retrieved NFTs for {collection_slug}. Total {i} pages")
+        return {"nfts": nfts, "next_pages": next_pages}
+
+    def get_nfts_for_collection_new(
         self,
         collection_slug: str,
         num_pages: int,
