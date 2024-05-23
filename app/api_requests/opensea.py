@@ -262,9 +262,10 @@ class OpenSea:
 
             response: dict = requests.get(
                 url, params=params, headers=self.headers
-            ).json()
+            )
 
             pprint(response)
+            response = response.json()
             if response.get("nfts"):
                 nfts.extend(response['nfts'])
 

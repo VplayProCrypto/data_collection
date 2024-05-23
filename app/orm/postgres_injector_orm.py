@@ -166,7 +166,7 @@ class Injector:
                     saved_pages += len(next_pages)
                 except Exception as e:
                     raise e
-                if '' in next_pages or None in next_pages:
+                if not next_pages or '' in next_pages or None in next_pages:
                     break
                 next_page = next_pages[-1]
     
@@ -195,8 +195,11 @@ class Injector:
 
     def insert_nft_events(self, collection_slug: str, event_type: str = 'transfer'):
         with Session(self.engine) as session:
-            last_event = session.execute(select(NFTEvent).where(NFTEvent.collection_slug == collection_slug)\
-                                        .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
+            last_event = session.execute(
+                select(NFTEvent)
+                .where(NFTEvent.collection_slug == collection_slug)
+                .where(NFTEvent.event_type == event_type)\
+                    .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
             collection: Collection = session.execute(
                 select(Collection)
                 .where(Collection.opensea_slug == collection_slug)
@@ -206,13 +209,14 @@ class Injector:
         
         print(contracts)
         if last_event is None:
-            print("no event for this collection found in db. retreving hstory")
+            print(f"no {event_type} event for this collection found in db. retreving hstory")
             # self.insert_nft_events_history(collection_slug)
             # with Session(self.engine) as session:
                 # after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
             from_block = 0
         else:
             from_block = last_event.block_number
+            print('retrieving after:', last_event.event_timestamp)
         next_page = None
         if event_type == 'sale':
             per_page = 10
@@ -268,7 +272,7 @@ class Injector:
                     print('Added transfers:', len(transfers))
                 except Exception as e:
                     print('-'*50, 'error', '-'*50)
-                    print(str(e.orig))
+                    print(str(e))
                     break
         
 
@@ -279,18 +283,18 @@ def main():
     # injector = Injector(username='tsdbadmin', password='m9u74pu73bg9fdxi', host='v4ob0qdj5t.y1jft9lh0x.tsdb.cloud.timescale.com', port='35641', database='tsdb')
     injector = Injector()
     
-    injector.raw_sql('./app/db/raw_sql/drop_tables.sql')
-    injector.raw_sql('./app/db/raw_sql/tables.sql')
-    injector.raw_sql('./app/db/raw_sql/hypertables.sql')
-    injector.raw_sql('./app/db/raw_sql/indexes.sql')
-    injector.raw_sql('./app/db/raw_sql/triggers.sql')
+    # injector.raw_sql('./app/db/raw_sql/drop_tables.sql')
+    # injector.raw_sql('./app/db/raw_sql/tables.sql')
+    # injector.raw_sql('./app/db/raw_sql/hypertables.sql')
+    # injector.raw_sql('./app/db/raw_sql/indexes.sql')
+    # injector.raw_sql('./app/db/raw_sql/triggers.sql')
     # injector.raw_sql('./app/db/raw_sql/compressions.sql')
     # initialize_db()
     injector.insert_collection(args['slug'])
     injector.insert_nfts(args['slug'])
     injector.insert_nft_events(args['slug'], event_type='transfer')
     injector.insert_nft_events(args['slug'], event_type='sale')
-    # injector.insert_erc20_transfers(args['slug'])
+    injector.insert_erc20_transfers(args['slug'])
 
 if __name__ == "__main__":
     main()

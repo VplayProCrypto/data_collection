@@ -41,7 +41,7 @@ class Alchemy:
         params = {
             "contractAddress": contract_address,
             "taker": "BUYER",
-            "fromBlock": from_block,
+            "fromBlock": hex(from_block),
             "order": "asc",
             "limit": per_page,
         }
@@ -50,6 +50,7 @@ class Alchemy:
             params["pageKey"] = next_page
 
         response = requests.get(url, headers=self.headers, params=params).json()
+        # print(response.url)
         
 
         return {"sales": response['nftSales'], "next_page": response["pageKey"]}
@@ -229,7 +230,8 @@ class Alchemy:
 
         response = requests.post(url, headers=self.headers, json=payload).json()
         # pprint(response['result']['transfers'][0])
-        return {"transfers": response['result']['transfers'], "next_page": response["result"]["pageKey"]}
+        print(response.keys(), response['result'].keys())
+        return {"transfers": response['result']['transfers'], "next_page": response["result"].get("pageKey")}
     
     def get_nft_transfers_new(
         self,
