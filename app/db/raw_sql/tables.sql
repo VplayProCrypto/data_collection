@@ -20,43 +20,65 @@ CREATE TABLE IF NOT EXISTS public.collection
     CONSTRAINT collection_pkey primary key (opensea_slug)
 );
 
-CREATE TABLE IF NOT EXISTS public.collection_dynamic
-(
-    collection_slug character varying not null,
-    game_id character varying,
-    total_average_price double precision,
-    total_supply double precision,
-    total_volume double precision,
-    total_num_owners integer,
-    total_sales double precision,
-    total_market_cap double precision,
-    sales double precision,
-    volume double precision,
-    floor_price double precision,
-    floor_price_currency character varying,
-    average_price double precision,
-    daily_uaw bigint,
-    monthly_uaw bigint,
-    total_wallets bigint,
-    twitter_followers bigint,
-    twitter_sentiment double precision,
-    facebook_followers bigint,
-    facebook_sentiment double precision,
-    instagram_followers bigint,
-    instagram_sentiment double precision,
-    reddit_users bigint,
-    reddit_sentiment double precision,
-    discord_server_size bigint,
-    discord_sentiment double precision,
-    telegram_supergroup_size bigint,
-    telgram_sentiment double precision,
-    event_timestamp timestamp with time zone not null,
-    CONSTRAINT collection_dynamic_pkey primary key (collection_slug, event_timestamp),
-    CONSTRAINT collection_dynamic_collection_slug_fkey FOREIGN KEY (collection_slug)
-        REFERENCES public.collection (opensea_slug) match simple
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+CREATE TABLE IF NOT EXISTS public.collection_dynamic (
+  collection_slug character varying NOT NULL,
+  game_id character varying,
+  total_average_price double precision,
+  total_supply double precision,
+  total_volume double precision,
+  total_num_owners integer,
+  total_sales double precision,
+  total_market_cap double precision,
+  sales double precision,
+  volume double precision,
+  floor_price double precision,
+  floor_price_currency character varying,
+  average_price double precision,
+  daily_uaw bigint,
+  monthly_uaw bigint,
+  total_wallets bigint,
+  twitter_followers bigint,
+  twitter_sentiment double precision,
+  facebook_followers bigint,
+  facebook_sentiment double precision,
+  instagram_followers bigint,
+  instagram_sentiment double precision,
+  reddit_users bigint,
+  reddit_sentiment double precision,
+  discord_server_size bigint,
+  discord_sentiment double precision,
+  telegram_supergroup_size bigint,
+  telgram_sentiment double precision,
+  event_timestamp timestamp with time zone NOT NULL,
+  twitter_rank INTEGER,
+  discord_rank INTEGER,
+  telegram_rank INTEGER,
+  CONSTRAINT collection_dynamic_pkey PRIMARY KEY (collection_slug, event_timestamp),
+  CONSTRAINT collection_dynamic_collection_slug_fkey FOREIGN KEY (collection_slug)
+    REFERENCES public.collection (opensea_slug) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
 );
+
+-- Leaderboard tables
+CREATE TABLE IF NOT EXISTS public.twitter_leaderboard (
+  collection_slug character varying PRIMARY KEY,
+  twitter_followers bigint
+  event_timestamp timestamp with time zone NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.discord_leaderboard (
+  collection_slug character varying PRIMARY KEY,
+  discord_server_size bigint
+  event_timestamp timestamp with time zone NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.telegram_leaderboard (
+  collection_slug character varying PRIMARY KEY,
+  telegram_supergroup_size bigint
+  event_timestamp timestamp with time zone NOT NULL
+);
+
 
 CREATE TABLE IF NOT EXISTS public.contract
 (

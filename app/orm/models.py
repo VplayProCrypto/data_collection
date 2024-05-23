@@ -11,6 +11,7 @@ from sqlalchemy import (
 )
 
 
+# yes
 class Collection(SQLModel, table=True):
     __tablename__ = "collection"
 
@@ -33,6 +34,7 @@ class Collection(SQLModel, table=True):
     updated_at: TIMESTAMP = Field(default=TIMESTAMP(timezone=True))
 
 
+# yes
 class CollectionDynamic(SQLModel, table=True):
     __tablename__ = "collection_dynamic"
 
@@ -66,9 +68,43 @@ class CollectionDynamic(SQLModel, table=True):
     discord_sentiment: Optional[float]
     telegram_supergroup_size: Optional[int]
     telegram_sentiment: Optional[float]
+    twitter_rank: Optional[int]
+    discord_rank: Optional[int]
+    telegram_rank: Optional[int]
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
 
+class TwitterLeaderboard(SQLModel, table=True):
+    __tablename__ = "twitter_leaderboard"
+
+    collection_slug: str = Field(
+        primary_key=True, foreign_key="collection.opensea_slug"
+    )
+    twitter_followers: Optional[int]
+    event_timestamp: TIMESTAMP = Field(primary_key=True)
+
+
+class DiscordLeaderboard(SQLModel, table=True):
+    __tablename__ = "discord_leaderboard"
+
+    collection_slug: str = Field(
+        primary_key=True, foreign_key="collection.opensea_slug"
+    )
+    discord_server_size: Optional[int]
+    event_timestamp: TIMESTAMP = Field(primary_key=True)
+
+
+class TelegramLeaderboard(SQLModel, table=True):
+    __tablename__ = "telegram_leaderboard"
+
+    collection_slug: str = Field(
+        primary_key=True, foreign_key="collection.opensea_slug"
+    )
+    telegram_supergroup_size: Optional[int]
+    event_timestamp: TIMESTAMP = Field(primary_key=True)
+
+
+# yes
 class Contract(SQLModel, table=True):
     __tablename__ = "contract"
 
@@ -91,6 +127,7 @@ class ERC20Transfer(SQLModel, table=True):
     collection_slug: Optional[str]
 
 
+# yes
 class Fee(SQLModel, table=True):
     __tablename__ = "fee"
 
@@ -101,6 +138,7 @@ class Fee(SQLModel, table=True):
     recipient: str = Field(primary_key=True)
 
 
+# yes
 class NFT(SQLModel, table=True):
     __tablename__ = "nft"
 
@@ -120,6 +158,7 @@ class NFT(SQLModel, table=True):
     traits: Optional[dict] = Field(sa_column=Column(JSON))
 
 
+# yes
 class PaymentToken(SQLModel, table=True):
     __tablename__ = "payment_tokens"
 
@@ -143,6 +182,7 @@ class TokenPrice(SQLModel, table=True):
     event_timestamp: TIMESTAMP = Field(primary_key=True)
 
 
+# yes
 class NFTEvent(SQLModel, table=True):
     __tablename__ = "nft_events"
 
@@ -235,6 +275,7 @@ class NFTOffer(SQLModel, table=True):
     )
 
 
+# yes
 class NFTListing(SQLModel, table=True):
     __tablename__ = "nft_listings"
 
