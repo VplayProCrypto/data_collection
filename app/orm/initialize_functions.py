@@ -204,8 +204,10 @@ def add_game(collection_slug: str, num_pages: int = 10000) -> None:
 def add_collection(collection_slug: str):
     injector = Injector()
     injector.insert_collection(collection_slug=collection_slug)
-    injector.insert_nfts(collection_slug=collection_slug, num_pages=10)
-    injector.insert_nft_events_history(collection_slug=collection_slug)
+    injector.insert_nfts(collection_slug=collection_slug)
+    injector.insert_nft_events(collection_slug=collection_slug, event_type='sale')
+    injector.insert_nft_events(collection_slug=collection_slug, event_type='transfer')
+    injector.insert_erc20_transfers(collection_slug)
 
 def init_db_new():
     sql_dir = 'app/db/raw_sql'
@@ -216,9 +218,9 @@ def init_db_new():
                 sql = file.read()
                 session.exec(text(sql))
         session.commit()
-    collections = ['decentraland', 'mavia-land']
+    collections = ['pixels-farm', 'decentraland', 'mavia-land']
     for i in collections:
-        add_game(i)
+        add_collection(i)
 
 def main():
     init_db_new()
