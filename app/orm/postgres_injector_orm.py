@@ -2,11 +2,13 @@ from datetime import datetime
 from typing import List, Set
 from sqlalchemy import text, func, create_engine, inspect, select
 from sqlalchemy.orm import Session
+from sqlmodel import Session as S
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
 from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
-    NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee
+    NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee, NFTDynamic
 from ..api_requests.etherscan import EtherScan
+from .rr import calculate_nft_roi, calculate_and_store_collection_roi
 import psycopg2
 import argparse
 from .transform import Mapper
@@ -243,6 +245,7 @@ class Injector:
         game_id = self.mapper._get_game_id(collection_slug)
         for erc_contract in self.games[game_id]['erc20Tokens']:
             print('inserting contract:', erc_contract)
+            prev_last_record = None
             while True:
                 with Session(self.engine) as session:
                     last_record = session.execute(
@@ -252,7 +255,11 @@ class Injector:
                         .limit(1)
                     ).scalars().first()
                     if last_record:
+                        if prev_last_record == last_record:
+                            print('All erc20 transfers inserted')
+                            break
                         after_date = last_record.event_timestamp
+                        prev_last_record = last_record
                     else:
                         print(f'no transfers for this erc 20 token: {erc_contract}. Retrieving history')
                         after_date = session.execute(
@@ -274,6 +281,12 @@ class Injector:
                     print('-'*50, 'error', '-'*50)
                     print(str(e))
                     break
+    
+    def calculate_and_store_rr(self, game_id: str):
+        with S(self.engine) as session:
+            nft_rois = calculate_nft_roi(session, game_id, self.games)
+            self.bulk_insert(nft_rois, NFTDynamic, upsert = False)
+            calculate_and_store_collection_roi(session, game_id)
         
 
 def main():
@@ -295,6 +308,7 @@ def main():
     injector.insert_nft_events(args['slug'], event_type='transfer')
     injector.insert_nft_events(args['slug'], event_type='sale')
     injector.insert_erc20_transfers(args['slug'])
+    injector.calculate_and_store_rr(injector.mapper._get_game_id(args['slug']))
 
 if __name__ == "__main__":
     main()

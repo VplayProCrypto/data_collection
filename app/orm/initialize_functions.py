@@ -203,24 +203,27 @@ def add_game(collection_slug: str, num_pages: int = 10000) -> None:
 
 def add_collection(collection_slug: str):
     injector = Injector()
+    game_id = injector.mapper._get_game_id(collection_slug)
     injector.insert_collection(collection_slug=collection_slug)
     injector.insert_nfts(collection_slug=collection_slug)
     injector.insert_nft_events(collection_slug=collection_slug, event_type='sale')
     injector.insert_nft_events(collection_slug=collection_slug, event_type='transfer')
     injector.insert_erc20_transfers(collection_slug)
+    injector.calculate_and_store_rr(game_id)
 
 def init_db_new():
     sql_dir = 'app/db/raw_sql'
     sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
-    with Session(engine) as session:
-        for sql_file in sql_files:
-            with open(sql_file, "r") as file:
-                sql = file.read()
-                session.exec(text(sql))
-        session.commit()
-    collections = ['pixels-farm', 'decentraland', 'mavia-land']
-    for i in collections:
-        add_collection(i)
+    # with Session(engine) as session:
+    #     for sql_file in sql_files:
+    #         with open(sql_file, "r") as file:
+    #             sql = file.read()
+    #             session.exec(text(sql))
+    #     session.commit()
+    collections = ['pixels-farm', 'mavia-land']
+    # game_ids = ['pixels', 'decentraland', 'mavia']
+    for c in collections:
+        add_collection(c)
 
 def main():
     init_db_new()

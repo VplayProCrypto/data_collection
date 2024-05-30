@@ -64,8 +64,12 @@ class CollectionDynamic(SQLModel, table=True):
     instagram_sentiment: Optional[float]
     reddit_users: Optional[int]
     reddit_sentiment: Optional[float]
-    discord_users: Optional[int]
+    discord_server_size: Optional[int]
     discord_sentiment: Optional[float]
+    telegram_supergroup_size: Optional[int]
+    telegram_sentiment: Optional[float]
+    rr_val: Optional[float]
+    rr_symbol: Optional[str]
     event_timestamp: datetime = Field(primary_key=True, )
 
 
@@ -200,7 +204,8 @@ class NFTDynamic(SQLModel, table=True):
     collection_slug: str
     token_id: str = Field(primary_key=True)
     contract_address: str = Field(primary_key=True)
-    rr: Optional[float]
+    rr_val: Optional[float]
+    rr_symbol: Optional[str]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
 
     # __table_args__ = (

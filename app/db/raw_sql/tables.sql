@@ -49,7 +49,9 @@ CREATE TABLE IF NOT EXISTS public.collection_dynamic
     discord_server_size bigint,
     discord_sentiment double precision,
     telegram_supergroup_size bigint,
-    telgram_sentiment double precision,
+    telegram_sentiment double precision,
+    rr_val double precision,
+    rr_symbol text,
     event_timestamp timestamp with time zone not null,
     CONSTRAINT collection_dynamic_pkey primary key (collection_slug, event_timestamp),
     CONSTRAINT collection_dynamic_collection_slug_fkey FOREIGN KEY (collection_slug)
@@ -194,7 +196,8 @@ CREATE TABLE IF NOT EXISTS public.nft_dynamic
     collection_slug character varying not null,
     token_id character varying not null,
     contract_address character varying not null,
-    rr numeric,
+    rr_val numeric,
+    rr_symbol text,
     event_timestamp timestamp with time zone not null default now(),
     CONSTRAINT nft_dynamic_pk primary key (contract_address, token_id, event_timestamp)
     -- CONSTRAINT nft_dynamic_token_id_fkey FOREIGN KEY (token_id, contract_address)
