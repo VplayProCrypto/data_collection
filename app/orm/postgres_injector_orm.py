@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
 from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
     NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee, NFTDynamic
 from ..api_requests.etherscan import EtherScan
+from .. import keys
 from .rr import calculate_nft_roi, calculate_and_store_collection_roi
 import psycopg2
 import argparse
@@ -17,16 +18,17 @@ import json
 
 class Injector:
     def __init__(self, username: str = None, password: str = None, port: str = None, database: str = None, host: str = None, eth_api_key: str = None, alchemy_api_key: str = None):
-        self.username = 'tsdbadmin'
-        self.port = '32026'
-        self.database = 'tsdb'
-        self.password = 'km8en9w8a96ghdtl'
-        self.host = 'busvxhxzr1.b505mpo6st.tsdb.cloud.timescale.com'
-        if not username:
-            self.url = f'postgresql+psycopg2://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
-        else:
-            self.url = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
+        # self.username = 'tsdbadmin'
+        # self.port = '32026'
+        # self.database = 'tsdb'
+        # self.password = 'km8en9w8a96ghdtl'
+        # self.host = 'busvxhxzr1.b505mpo6st.tsdb.cloud.timescale.com'
+        # if not username:
+        #     self.url = f'postgresql+psycopg2://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
+        # else:
+        #     self.url = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
         
+        self.url = keys.timescale_url
         self.engine = create_engine(self.url)
         self.mapper = Mapper(eth_api_key = eth_api_key, alchemy_api_key = alchemy_api_key)
         with open('app/games.json') as f:
