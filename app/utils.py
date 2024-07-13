@@ -62,3 +62,12 @@ def get_game_id(collection_slug: str, games: dict) -> str:
         if game_id in collection_slug:
             return game_id
     return ""
+
+def load_collections_from_file(file_name):
+    with open(file_name, 'r') as f:
+        games = json.load(f)
+    collections = []
+    for g in games:
+        collections.extend(games[g]['collection_slugs'])
+    print(collections)
+    return collections

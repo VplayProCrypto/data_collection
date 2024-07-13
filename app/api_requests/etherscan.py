@@ -7,8 +7,8 @@ import time
 from datetime import datetime, date, timedelta
 from sqlmodel import create_engine, Session
 from sqlalchemy.engine import Engine
-from ..orm.models import ERC20Transfer
-from .. import keys
+from orm.models import ERC20Transfer
+import keys
 
 
 class EtherScan:

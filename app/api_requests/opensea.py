@@ -6,8 +6,8 @@ import argparse
 import time
 from datetime import datetime, date, timedelta
 from sqlmodel import Session
-from ..orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
-from .. import keys
+from orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
+import keys
 
 
 class OpenSea:

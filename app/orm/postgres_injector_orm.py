@@ -7,17 +7,22 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
 from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
     NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee, NFTDynamic
-from ..api_requests.etherscan import EtherScan
-from .. import keys
+from api_requests.etherscan import EtherScan
+import keys
 from .rr import calculate_nft_roi, calculate_and_store_collection_roi
+from logging_config import setup_logging
 import psycopg2
 import argparse
 from .transform import Mapper
 import time
 import json
+import logging
+
 
 class Injector:
     def __init__(self, username: str = None, password: str = None, port: str = None, database: str = None, host: str = None, eth_api_key: str = None, alchemy_api_key: str = None):
+        setup_logging()
+        self.logger = logging.getLogger(__name__)
         # self.username = 'tsdbadmin'
         # self.port = '32026'
         # self.database = 'tsdb'
@@ -81,7 +86,7 @@ class Injector:
         insert_smt = insert(model).values(new_data)
         index_columns = [key.name for key in inspect(model).primary_key]
         if upsert:
-            print(index_columns)
+            # print.info(index_columns)
             smt = insert_smt.on_conflict_do_update(index_elements=index_columns, set_=insert_smt.excluded)
         else:
             smt = insert_smt.on_conflict_do_nothing(index_elements = index_columns)
@@ -94,6 +99,7 @@ class Injector:
             try:
                 session.execute(self.get_insert_smt(new_data, model, upsert))
                 session.commit()
+                print.info(f'Time Taken to insert: {time.time() - t}')
                 print(f'Time Taken to insert: {time.time() - t}')
             except ProgrammingError as e:
                 if isinstance(e.orig, psycopg2.errors.InFailedSqlTransaction):
@@ -103,26 +109,26 @@ class Injector:
                     without_duplicates = self._remove_duplicates(new_data, index_columns)
                     session.execute(self.get_insert_smt(without_duplicates, model, upsert))
                     session.commit()
-                    print(f'Time Taken to insert: {time.time() - t}')
+                    print.info(f'Time Taken to insert: {time.time() - t}')
                 else:
                     raise e
             except SQLAlchemyError as e:
                 # This catches other SQLAlchemy-related errors
                 session.rollback()  # Ensure the session is rolled back on any error
-                print("SQLAlchemy error occurred: ", e)
+                print.error("SQLAlchemy error occurred: ", e)
                 raise e
     
     def insert_collection(self, collection_slug: str):
         data = self.mapper.get_collection(collection_slug)
-        # print(data.keys())
+        # print.info(data.keys())
         collection = Collection(**data['collection'])
-        # print(collection)
+        # print.info(collection)
         for i in data['fees']:
             collection.fees.append(Fee(**i))
-        # print(collection.fees)
+        # print.info(collection.fees)
         for i in data['contracts']:
             collection.contracts.append(Contract(**i))
-        # print(collection.contracts)
+        # print.info(collection.contracts)
         try:
             with Session(self.engine) as session:
                 session.merge(collection)
@@ -136,7 +142,7 @@ class Injector:
         try:
             with open(next_page_file, 'r') as f:
                 next_page = f.readlines()[-1]
-                print(next_page)
+                print.info(next_page)
         except FileNotFoundError or FileExistsError as e:
             next_page = None
         
@@ -145,13 +151,13 @@ class Injector:
             nfts = r['nfts']
             next_pages = r['next_pages']
             if len(nfts) < 1:
-                print("All nfts retirved")
+                print.info("All nfts retirved")
                 return
             try:
                 t = time.time()
                 self.bulk_insert(nfts, NFT)
                 self._save_next_page(next_page_file, next_pages)
-                print(f"saved pages {len(nfts)}. Time taken: {time.time() - t} seconds")
+                print.info(f"saved pages {len(nfts)}. Time taken: {time.time() - t} seconds")
             except Exception as e:
                 raise e
         else:
@@ -159,10 +165,10 @@ class Injector:
             while True:
                 r = self.mapper.get_nfts_for_collection(collection_slug, num_pages = 1, next_page = next_page)
                 nfts = r['nfts']
-                # print(nfts[:2])
+                # print.info(nfts[:2])
                 next_pages = r['next_pages']
                 if len(nfts) < 1:
-                    print("All nfts retirved")
+                    print.info("All nfts retirved")
                     return
                 try:
                     self.bulk_insert(r['nfts'], NFT)
@@ -192,7 +198,7 @@ class Injector:
                 # t = time.time()
                 self.bulk_insert(events, NFTEvent)
                 tot_events += len(events)
-                print(f"Events inserted {tot_events}")
+                print.info(f"Events inserted {tot_events}")
             else:
                 break
 
@@ -211,16 +217,16 @@ class Injector:
             ).scalars().first()
             contracts = [i.model_dump() for i in collection.contracts]
         
-        print(contracts)
+        print.info(contracts)
         if last_event is None:
-            print(f"no {event_type} event for this collection found in db. retreving hstory")
+            print.info(f"no {event_type} event for this collection found in db. retreving hstory")
             # self.insert_nft_events_history(collection_slug)
             # with Session(self.engine) as session:
                 # after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
             from_block = 0
         else:
             from_block = last_event.block_number
-            print('retrieving after:', last_event.event_timestamp)
+            print.info('retrieving after:', last_event.event_timestamp)
         next_page = None
         if event_type == 'sale':
             per_page = 10
@@ -228,14 +234,14 @@ class Injector:
             per_page = 1000
         while True:
             res = self.mapper.get_nft_events_for_collection(collection_slug, from_block = from_block, per_page = per_page, next_page=next_page, contracts = contracts, event_type = event_type)
-            # print(res['events'][0])
+            # print.info(res['events'][0])
             try:
                 self.bulk_insert(res['events'], NFTEvent)
                 next_page = res['next_page']
-                print('Added:', len(res['events']))
+                print.info('Added:', len(res['events']))
             except Exception as e:
-                print("unable to insert. Skipping entire block")
-                print(e)
+                print.error("unable to insert. Skipping entire block")
+                print.error(e)
                 break
             finally:
                 if not next_page:
@@ -246,7 +252,7 @@ class Injector:
         # transfers = etherscan.get_erc20_transfers
         game_id = self.mapper._get_game_id(collection_slug)
         for erc_contract in self.games[game_id]['erc20Tokens']:
-            print('inserting contract:', erc_contract)
+            print.info('inserting contract:', erc_contract)
             prev_last_record = None
             while True:
                 with Session(self.engine) as session:
@@ -258,30 +264,30 @@ class Injector:
                     ).scalars().first()
                     if last_record:
                         if prev_last_record == last_record:
-                            print('All erc20 transfers inserted')
+                            print.info('All erc20 transfers inserted')
                             break
                         after_date = last_record.event_timestamp
                         prev_last_record = last_record
                     else:
-                        print(f'no transfers for this erc 20 token: {erc_contract}. Retrieving history')
+                        print.info(f'no transfers for this erc 20 token: {erc_contract}. Retrieving history')
                         after_date = session.execute(
                             select(Collection.created_date)
                             .where(Collection.opensea_slug == collection_slug)
                             .limit(1)
                         ).scalars().first()
-                print('retreiving after:', after_date, 'last record:', last_record)
+                print.info('retreiving after:', after_date, 'last record:', last_record)
                 t = time.time()
                 transfers = self.mapper.get_erc20_transfers(erc_contract, after_date, collection_slug)
-                print(f'Retrival time: {time.time() - t} seconds')
+                print.info(f'Retrival time: {time.time() - t} seconds')
                 if len(transfers) == 0:
-                    # pprint()
+                    # pprint.info()
                     break
                 try:
                     self.bulk_insert(transfers, ERC20Transfer, upsert = False)
-                    print('Added transfers:', len(transfers))
+                    print.info('Added transfers:', len(transfers))
                 except Exception as e:
-                    print('-'*50, 'error', '-'*50)
-                    print(str(e))
+                    print.error('-'*50, 'error', '-'*50)
+                    print.error(str(e))
                     break
     
     def calculate_and_store_rr(self, game_id: str):

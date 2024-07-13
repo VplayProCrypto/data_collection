@@ -6,8 +6,8 @@ import argparse
 import time
 from datetime import datetime, date, timedelta
 from sqlmodel import Session
-from .. import keys
-from ..orm.models import NFT, NFTEvent
+import keys
+from orm.models import NFT, NFTEvent
 # from utils import append_data_to_file
 
 class Alchemy:

@@ -3,30 +3,37 @@
         "name": "The Sandbox",
         "erc20Tokens": [
             "0x3845badAde8e6dFF049820680d1F14bD3903a5d0"
-        ]
-    },
-    "axie": {
-        "name": "Axie Infinity",
-        "erc20Tokens": [
-            "0x3845badAde8e6dFF049820680d1F14bD3903a5d0"
+        ],
+        "collection_slugs": [
+            "sandbox-assets",
+            "sandbox"
         ]
     },
     "decentraland": {
         "name": "Decentraland",
         "erc20Tokens": [
             "0x0F5D2fB29fb7d3CFeE444a200298f468908cC942"
+        ],
+        "collection_slugs": [
+            "decentraland"
         ]
     },
     "mavia": {
         "name": "Mavia Land",
         "erc20Tokens": [
             "0x24fcFC492C1393274B6bcd568ac9e225BEc93584"
+        ],
+        "collection_slugs": [
+            "mavia-land"
         ]
     },
     "pixels": {
         "name": "Pixels Farm",
         "erc20Tokens": [
             "0x3429d03c6F7521AeC737a0BBF2E5ddcef2C3Ae31"
+        ],
+        "collection_slugs": [
+            "pixels-farm"
         ]
     }
 }

@@ -5,8 +5,8 @@ from datetime import datetime
 import time
 from typing import List, Optional
 import pytz
-from ..orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
-from .. import keys
+from orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
+import keys
 import json
 from pprint import pprint
 # import numpy as np

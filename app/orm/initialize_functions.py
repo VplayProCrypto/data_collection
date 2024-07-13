@@ -4,15 +4,21 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from datetime import datetime
 import json
+import concurrent.futures
+import schedule
+
+
 from .models import CollectionDynamic
-from ..api_requests.dappradar import get_uaw_from_dappradar
-from ..api_requests.discord import get_guild_member_count
-from ..api_requests.twitter import get_user_public_metrics
-from ..api_requests.alchemy import Alchemy
-from ..api_requests.etherscan import EtherScan
-from ..api_requests.opensea import OpenSea
+from api_requests.dappradar import get_uaw_from_dappradar
+from api_requests.discord import get_guild_member_count
+from api_requests.twitter import get_user_public_metrics
+from api_requests.alchemy import Alchemy
+from api_requests.etherscan import EtherScan
+from api_requests.opensea import OpenSea
 from .postgres_injector_orm import Injector
-from .. import keys
+import keys as keys
+from celery_config import celery_app as app
+from utils import load_collections_from_file
 
 # engine = create_engine(os.environ.get("TIMESCALE_URL"))
 engine = create_engine(keys.timescale_url)
@@ -201,8 +207,10 @@ def add_game(collection_slug: str, num_pages: int = 10000) -> None:
 
     # TODO NFT OWNERSHIP
 
+# @app.task
 def add_collection(collection_slug: str):
     injector = Injector()
+    
     game_id = injector.mapper._get_game_id(collection_slug)
     injector.insert_collection(collection_slug=collection_slug)
     injector.insert_nfts(collection_slug=collection_slug)
@@ -211,19 +219,27 @@ def add_collection(collection_slug: str):
     injector.insert_erc20_transfers(collection_slug)
     injector.calculate_and_store_rr(game_id)
 
+# @app.task
+def add_all_collections(file_path: str, max_workers = 4):
+    # collections = ['pixels-farm', 'mavia-land', 'decentraland']
+    collections = load_collections_from_file(file_path)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(add_collection, collection) for collection in collections]
+        concurrent.futures.wait(futures)
+    # collections = load_collections_from_file(file_path)
+    # for c in collections:
+    #     add_collection.delay(c)
+
 def init_db_new():
-    sql_dir = 'app/db/raw_sql'
+    sql_dir = os.path.join('db', 'raw_sql')
     sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
-    # with Session(engine) as session:
-    #     for sql_file in sql_files:
-    #         with open(sql_file, "r") as file:
-    #             sql = file.read()
-    #             session.exec(text(sql))
-    #     session.commit()
-    collections = ['pixels-farm', 'mavia-land']
-    # game_ids = ['pixels', 'decentraland', 'mavia']
-    for c in collections:
-        add_collection(c)
+    with Session(engine) as session:
+        for sql_file in sql_files:
+            with open(sql_file, "r") as file:
+                sql = file.read()
+                session.exec(text(sql))
+        session.commit()
+
 
 def main():
     init_db_new()
