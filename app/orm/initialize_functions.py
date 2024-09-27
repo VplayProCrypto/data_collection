@@ -4,8 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from datetime import datetime
 import json
-import concurrent.futures
-import schedule
+import logging
 
 
 from .models import CollectionDynamic
@@ -219,16 +218,21 @@ def add_collection(collection_slug: str):
     injector.insert_erc20_transfers(collection_slug)
     injector.calculate_and_store_rr(game_id)
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level = logging.DEBUG)
+
 # @app.task
-def add_all_collections(file_path: str, max_workers = 4):
+def add_all_collections(file_path: str):
     # collections = ['pixels-farm', 'mavia-land', 'decentraland']
+    logger.debug('loading collection names')
     collections = load_collections_from_file(file_path)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(add_collection, collection) for collection in collections]
-        concurrent.futures.wait(futures)
-    # collections = load_collections_from_file(file_path)
-    # for c in collections:
-    #     add_collection.delay(c)
+    logger.debug('loaded collection names')
+    print("collections", collections)
+    # with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    #     futures = [executor.submit(add_collection, collection) for collection in collections]
+    #     concurrent.futures.wait(futures)
+    for c in collections:
+        add_collection(c)
 
 def init_db_new():
     sql_dir = os.path.join('db', 'raw_sql')
@@ -239,6 +243,7 @@ def init_db_new():
                 sql = file.read()
                 session.exec(text(sql))
         session.commit()
+    add_all_collections('games.json')
 
 
 def main():

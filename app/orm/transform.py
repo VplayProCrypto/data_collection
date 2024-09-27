@@ -9,7 +9,7 @@ from api_requests.etherscan import EtherScan
 from utils import unflatten_nested_lists
 
 class Mapper:
-    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "app/games.json"):
+    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "games.json"):
         self.opensea = OpenSea()
         self.ethscan = EtherScan()
         self.alchemy = Alchemy()

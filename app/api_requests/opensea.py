@@ -21,21 +21,21 @@ class OpenSea:
             # "x-api-key": os.environ.get("OPENSEA_API_KEY"),
             'x-api-key': keys.opensea_api_key
         }
-        self.games = json.load(open('app/games.json'))
+        # self.games = json.load(open('app/games.json'))
         # print(self.games)
         self.chain = chain
 
-    def get_game_name(self, collection_slug: str, games: dict) -> str:
-        for game_id in games.keys():
-            if game_id in collection_slug:
-                return games[game_id]['name']
-        return ""
+    # def get_game_name(self, collection_slug: str, games: dict) -> str:
+    #     for game_id in games.keys():
+    #         if game_id in collection_slug:
+    #             return games[game_id]['name']
+    #     return ""
 
-    def get_game_id(self, collection_slug: str, games: dict) -> str:
-        for game_id in games.keys():
-            if game_id in collection_slug:
-                return game_id
-        return ""
+    # def get_game_id(self, collection_slug: str, games: dict) -> str:
+    #     for game_id in games.keys():
+    #         if game_id in collection_slug:
+    #             return game_id
+    #     return ""
 
     def get_collection(self, collection_slug: str) -> dict:
         """
