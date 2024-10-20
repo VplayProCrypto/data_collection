@@ -119,6 +119,7 @@ class Injector:
                 raise e
     
     def insert_collection(self, collection_slug: str):
+        self.logger.info(f'Adding Collection: {collection_slug}')
         data = self.mapper.get_collection(collection_slug)
         # self.logger.info(data.keys())
         collection = Collection(**data['collection'])
@@ -142,8 +143,8 @@ class Injector:
         try:
             with open(next_page_file, 'r') as f:
                 next_page = f.readlines()[-1]
-                self.logger.info(next_page)
-        except FileNotFoundError or FileExistsError as e:
+                self.logger.info(f'Collection: {collection_slug}, page: {next_page}')
+        except FileNotFoundError or FileExistsError or IndexError as e:
             next_page = None
         
         if num_pages:
@@ -207,26 +208,26 @@ class Injector:
         with Session(self.engine) as session:
             last_event = session.execute(
                 select(NFTEvent)
-                .where(NFTEvent.collection_slug == collection_slug)
+                .where(NFTEvent.collection_slug == collection_slug)\
                 .where(NFTEvent.event_type == event_type)\
-                    .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
+                .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
             collection: Collection = session.execute(
-                select(Collection)
-                .where(Collection.opensea_slug == collection_slug)
+                select(Collection)\
+                .where(Collection.opensea_slug == collection_slug)\
                 .limit(1)
             ).scalars().first()
             contracts = [i.model_dump() for i in collection.contracts]
         
         self.logger.info(contracts)
         if last_event is None:
-            self.logger.info(f"no {event_type} event for this collection found in db. retreving hstory")
+            self.logger.info(f"no {event_type} event for {collection_slug} found in db. retreving hstory")
             # self.insert_nft_events_history(collection_slug)
             # with Session(self.engine) as session:
                 # after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
             from_block = 0
         else:
             from_block = last_event.block_number
-            self.logger.info('retrieving after:', last_event.event_timestamp)
+            self.logger.info(f'retrieving after: {last_event.event_timestamp}')
         next_page = None
         if event_type == 'sale':
             per_page = 10
@@ -238,7 +239,7 @@ class Injector:
             try:
                 self.bulk_insert(res['events'], NFTEvent)
                 next_page = res['next_page']
-                self.logger.info('Added:', len(res['events']))
+                self.logger.info(f'Added: {str(len(res["events"]))}')
             except Exception as e:
                 self.logger.error("unable to insert. Skipping entire block")
                 self.logger.error(e)
@@ -252,14 +253,14 @@ class Injector:
         # transfers = etherscan.get_erc20_transfers
         game_id = self.mapper._get_game_id(collection_slug)
         for erc_contract in self.games[game_id]['erc20Tokens']:
-            self.logger.info('inserting contract:', erc_contract)
+            self.logger.info(f'inserting contract: {erc_contract}')
             prev_last_record = None
             while True:
                 with Session(self.engine) as session:
                     last_record = session.execute(
-                        select(ERC20Transfer)
-                        .where(ERC20Transfer.contract_address == erc_contract.lower())
-                        .order_by(ERC20Transfer.event_timestamp.desc())
+                        select(ERC20Transfer)\
+                        .where(ERC20Transfer.contract_address == erc_contract.lower())\
+                        .order_by(ERC20Transfer.event_timestamp.desc())\
                         .limit(1)
                     ).scalars().first()
                     if last_record:
@@ -271,11 +272,11 @@ class Injector:
                     else:
                         self.logger.info(f'no transfers for this erc 20 token: {erc_contract}. Retrieving history')
                         after_date = session.execute(
-                            select(Collection.created_date)
-                            .where(Collection.opensea_slug == collection_slug)
+                            select(Collection.created_date)\
+                            .where(Collection.opensea_slug == collection_slug)\
                             .limit(1)
                         ).scalars().first()
-                self.logger.info('retreiving after:', after_date, 'last record:', last_record)
+                self.logger.info(f'retreiving after: {after_date}, last record: {last_record}')
                 t = time.time()
                 transfers = self.mapper.get_erc20_transfers(erc_contract, after_date, collection_slug)
                 self.logger.info(f'Retrival time: {time.time() - t} seconds')
@@ -284,7 +285,7 @@ class Injector:
                     break
                 try:
                     self.bulk_insert(transfers, ERC20Transfer, upsert = False)
-                    self.logger.info('Added transfers:', len(transfers))
+                    self.logger.info(f'Added transfers: {str(len(transfers))}')
                 except Exception as e:
                     self.logger.error('-'*50, 'error', '-'*50)
                     self.logger.error(str(e))

@@ -203,7 +203,9 @@ def calculate_and_store_collection_roi(session: Session, game_id: str):
         else:
             avg_collection_roi = None
         
+        print('-----------------------')
         print(avg_collection_roi)
+        print('-----------------------')
 
         # Update the collection_dynamic table
         # collection_dynamic = session.exec(
@@ -218,20 +220,23 @@ def calculate_and_store_collection_roi(session: Session, game_id: str):
         
         collection_dynamic = None
 
-        if collection_dynamic:
-            collection_dynamic.roi = avg_collection_roi
-            collection_dynamic.event_timestamp = datetime.now().replace(tzinfo=pytz.UTC)
-        else:
-            collection_dynamic = CollectionDynamic(
-                collection_slug=collection_slug,
-                game_id=game_id,
-                rr_val=avg_collection_roi,
-                rr_symbol = latest_nft_rois[0].rr_symbol,
-                event_timestamp = datetime.now(pytz.UTC).replace(tzinfo=pytz.UTC)
-            )
+        # tot_avg_price = calculate_average_buy_price(session)
         
-        session.add(collection_dynamic)
-        session.commit()
+        if latest_nft_rois:
+            if collection_dynamic:
+                collection_dynamic.roi = avg_collection_roi
+                collection_dynamic.event_timestamp = datetime.now().replace(tzinfo=pytz.UTC)
+            else:
+                collection_dynamic = CollectionDynamic(
+                    collection_slug=collection_slug,
+                    game_id=game_id,
+                    rr_val=avg_collection_roi,
+                    rr_symbol = latest_nft_rois[0].rr_symbol,
+                    event_timestamp = datetime.now(pytz.UTC).replace(tzinfo=pytz.UTC),
+                )
+            
+            session.add(collection_dynamic)
+            session.commit()
 
 # Main function to execute the batch processing and calculations
 def main():

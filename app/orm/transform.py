@@ -283,13 +283,17 @@ class Mapper:
         #     return 'polygon-mainnet'
         # elif chain == 'polygon':
         #     return 'polygon-mainnet'
-        else:
-            raise ValueError(f"Invalid chain: {chain}")
+        # else:
+        #     raise ValueError(f"Invalid chain: {chain}")
     
     def get_nft_events_for_collection(self, collection_slug: str, contracts: list[dict], from_block: int, event_type: str = 'transfer', per_page: int = 1000, next_page: str | None = None):
         game_id = self._get_game_id(collection_slug)
+        events = []
+        # if len(contracts) < 1:
+            # print('No contracts present. NFTs')
+        contracts_alc = [i for i in contracts if i['chain'] in ['ethereum', 'polygon', 'arbitum']]
         if event_type == 'sale':
-            for ca in contracts:
+            for ca in contracts_alc:
                 # pprint(ca)
                 r = self.alchemy.get_nft_sales(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=per_page)
                 events = r['sales']
@@ -300,7 +304,7 @@ class Mapper:
                 'next_page': r['next_page']
             }
         if event_type == 'transfer':
-            for ca in contracts:
+            for ca in contracts_alc:
                 # pprint(ca)
                 r = self.alchemy.get_nft_transfers(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=per_page)
                 events = r['transfers']

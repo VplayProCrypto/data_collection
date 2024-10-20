@@ -264,8 +264,8 @@ class OpenSea:
                 url, params=params, headers=self.headers
             )
 
-            pprint(response)
             response = response.json()
+            # pprint(response)
             if response.get("nfts"):
                 nfts.extend(response['nfts'])
 
