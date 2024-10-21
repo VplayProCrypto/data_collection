@@ -1,4 +1,5 @@
 import json
+import time
 
 from datetime import datetime, timedelta
 from pprint import pprint
@@ -254,6 +255,13 @@ class Mapper:
             'event_timestamp': datetime.fromtimestamp(price_data[''])
         }
     
+    def map_opensea_collection_stats(self, collection_stats):
+        return {
+            'num_owners': collection_stats['total']['num_owners'],
+            'market_cap': collection_stats['total']['market_cap'],
+            'floor_price': collection_stats['total']['floor_price'],
+            'floor_price_currency': collection_stats['total']['floor_price_symbol']
+        }
     
     def get_collection(self, collection_slug: str):
         collection_data = self.opensea.get_collection(collection_slug)
@@ -286,29 +294,37 @@ class Mapper:
         # else:
         #     raise ValueError(f"Invalid chain: {chain}")
     
-    def get_nft_events_for_collection(self, collection_slug: str, contracts: list[dict], from_block: int, event_type: str = 'transfer', per_page: int = 1000, next_page: str | None = None):
+    def get_nft_events_for_collection(self, collection_slug: str, contract: dict, from_block: int, event_type: str = 'transfer', per_page: int = 1000, next_page: str | None = None):
         game_id = self._get_game_id(collection_slug)
         events = []
         # if len(contracts) < 1:
             # print('No contracts present. NFTs')
-        contracts_alc = [i for i in contracts if i['chain'] in ['ethereum', 'polygon', 'arbitum']]
+        # contracts_alc = [i for i in contracts if i['chain'] in ['ethereum', 'polygon', 'arbitum']]
+        if contract['chain'] != 'ethereum':
+            print(f"Chain not supported: {contract['chain']}")
+            return {
+                'events': [],
+                'next_page': None
+            }
         if event_type == 'sale':
-            for ca in contracts_alc:
-                # pprint(ca)
-                r = self.alchemy.get_nft_sales(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=per_page)
-                events = r['sales']
-                # print(len(events))
+            # pprint(ca)
+            r = self.alchemy.get_nft_sales(contract['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(contract['chain']), per_page=per_page)
+            events = r['sales']
+            # print(len(events))
             events_mapped = [self.map_alchemy_nft_sale(i, collection_slug, game_id) for i in events]
             return {
                 'events': unflatten_nested_lists(events_mapped),
                 'next_page': r['next_page']
             }
         if event_type == 'transfer':
-            for ca in contracts_alc:
-                # pprint(ca)
-                r = self.alchemy.get_nft_transfers(ca['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(ca['chain']), per_page=per_page)
-                events = r['transfers']
+            # print('-------------------------------------------------------------------')
+            # print('Adding transfer event')
+            # pprint(ca)
+            r = self.alchemy.get_nft_transfers(contract['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(contract['chain']), per_page=per_page)
+            events = r['transfers']
             events_mapped = [self.map_alchemy_nft_transfer(i, collection_slug, game_id) for i in events]
+            # pprint(events_mapped[0])
+            # print('-------------------------------------------------------------------')
             return {
                 'events': unflatten_nested_lists(events_mapped),
                 'next_page': r['next_page']
@@ -326,6 +342,10 @@ class Mapper:
         # pprint(transfers[0])
         # print('-'*50)
         return [self.map_etherscan_erc20_transfer(i, collection_slug) for i in transfers]
+    
+    def get_collection_stats(self, collection_slug: str):
+        stats = self.opensea.get_collection_stats(collection_slug)
+        return self.map_opensea_collection_stats(stats)
 
 def main():
     collection_slug = 'the-sandbox-assets'

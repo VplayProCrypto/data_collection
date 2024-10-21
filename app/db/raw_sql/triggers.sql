@@ -32,13 +32,15 @@ begin
 
     insert into nft_ownership (token_id, contract_address, seller, buyer, buy_time, sell_time, collection_slug, transaction_hash, game_id, quantity)
     values (new.token_id, new.contract_address, new.seller, new.buyer, new.event_timestamp,
-            null, new.collection_slug, new.transaction_hash, new.game_id, new.quantity);
+            null, new.collection_slug, new.transaction_hash, new.game_id, new.quantity)
+    on conflict (token_id, contract_address, buyer, buy_time) do nothing;
     
 
     if total_quantity > new.quantity then
         insert into nft_ownership (token_id, contract_address, seller, buyer, buy_time, sell_time, collection_slug, transaction_hash, game_id, quantity)
         values (prev_rec.token_id, prev_rec.contract_address, null, prev_rec.buyer, new.event_timestamp,
-                null, prev_rec.collection_slug, prev_rec.transaction_hash, prev_rec.game_id, total_quantity - new.quantity);
+                null, prev_rec.collection_slug, prev_rec.transaction_hash, prev_rec.game_id, total_quantity - new.quantity)
+        on conflict (token_id, contract_address, buyer, buy_time) do nothing;
     end if;
     return new;
 end$$

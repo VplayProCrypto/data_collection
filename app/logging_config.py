@@ -8,8 +8,9 @@ def setup_logging():
     handler.setLevel(logging.INFO)
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(handler)
+    if not root_logger.hasHandlers():
+        root_logger.setLevel(logging.INFO)
+        root_logger.addHandler(handler)
     
     # Adjust the logging level of noisy libraries if necessary
     logging.getLogger('urllib3').setLevel(logging.WARNING)

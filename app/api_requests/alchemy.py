@@ -48,8 +48,13 @@ class Alchemy:
 
         if next_page:
             params["pageKey"] = next_page
+        
+        # print('--------------------------------------------------------------')
+        # pprint(params)
+        # print('--------------------------------------------------------------')
 
         response = requests.get(url, headers=self.headers, params=params).json()
+        # pprint(response.keys())
         # print(response.url)
         
 

@@ -433,3 +433,13 @@ class OpenSea:
 
         print(f"Total events retrieved: {len(events)} in time: {time.time() - t}")
         return events
+    
+    def get_collection_stats(self, collection_slug: str):
+        assert(isinstance(collection_slug, str)), "Collection slug should be a string"
+        url = self.base_url + f"collections/{collection_slug}/stats"
+        try:
+            r = requests.get(url, headers = self.headers).json()
+            # pprint(r)
+            return r
+        except Exception as e:
+            print(f"Unable to retrieve stats for collection {collection_slug}. Error: {e}")

@@ -21,7 +21,7 @@ import logging
 
 class Injector:
     def __init__(self, username: str = None, password: str = None, port: str = None, database: str = None, host: str = None, eth_api_key: str = None, alchemy_api_key: str = None):
-        setup_logging()
+        # setup_logging()
         self.logger = logging.getLogger(__name__)
         # self.username = 'tsdbadmin'
         # self.port = '32026'
@@ -181,44 +181,37 @@ class Injector:
                     break
                 next_page = next_pages[-1]
     
-    def insert_nft_events_history(self, collection_slug: str):
-        # next_page_file = f'../next_page/opensea/nft_events/{collection_slug}.txt'
-        with Session(self.engine) as session:
-            after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
+    # def insert_nft_events_history(self, collection_slug: str):
+    #     # next_page_file = f'../next_page/opensea/nft_events/{collection_slug}.txt'
+    #     with Session(self.engine) as session:
+    #         after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
         
-        tot_events = 0
-        while True:
-            first_event = session.execute(select(NFTEvent.event_timestamp).where(NFTEvent.collection_slug == collection_slug)\
-                                        .order_by(NFTEvent.event_timestamp).limit(1)).scalars().first()
-            if first_event:
-                before_date = first_event
-            else:
-                before_date = None
-            events = self.mapper.get_nft_events_for_collection(collection_slug, after_date = after_date, max_recs = 100, before_date = before_date)
-            if events:
-                # t = time.time()
-                self.bulk_insert(events, NFTEvent)
-                tot_events += len(events)
-                self.logger.info(f"Events inserted {tot_events}")
-            else:
-                break
-
-
-    def insert_nft_events(self, collection_slug: str, event_type: str = 'transfer'):
+    #     tot_events = 0
+    #     while True:
+    #         first_event = session.execute(select(NFTEvent.event_timestamp).where(NFTEvent.collection_slug == collection_slug)\
+    #                                     .order_by(NFTEvent.event_timestamp).limit(1)).scalars().first()
+    #         if first_event:
+    #             before_date = first_event
+    #         else:
+    #             before_date = None
+    #         events = self.mapper.get_nft_events_for_collection(collection_slug, after_date = after_date, max_recs = 100, before_date = before_date)
+    #         if events:
+    #             # t = time.time()
+    #             self.bulk_insert(events, NFTEvent)
+    #             tot_events += len(events)
+    #             self.logger.info(f"Events inserted {tot_events}")
+    #         else:
+    #             break
+    
+    def insert_nft_events_contract(self, collection_slug: str, contract: str, event_type: str = 'transfer'):
         with Session(self.engine) as session:
             last_event = session.execute(
                 select(NFTEvent)
                 .where(NFTEvent.collection_slug == collection_slug)\
                 .where(NFTEvent.event_type == event_type)\
+                .where(NFTEvent.contract_address == contract['contract_address'])\
                 .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
-            collection: Collection = session.execute(
-                select(Collection)\
-                .where(Collection.opensea_slug == collection_slug)\
-                .limit(1)
-            ).scalars().first()
-            contracts = [i.model_dump() for i in collection.contracts]
         
-        self.logger.info(contracts)
         if last_event is None:
             self.logger.info(f"no {event_type} event for {collection_slug} found in db. retreving hstory")
             # self.insert_nft_events_history(collection_slug)
@@ -230,23 +223,39 @@ class Injector:
             self.logger.info(f'retrieving after: {last_event.event_timestamp}')
         next_page = None
         if event_type == 'sale':
-            per_page = 10
+            per_page = 20
         else:
             per_page = 1000
         while True:
-            res = self.mapper.get_nft_events_for_collection(collection_slug, from_block = from_block, per_page = per_page, next_page=next_page, contracts = contracts, event_type = event_type)
+            res = self.mapper.get_nft_events_for_collection(collection_slug, from_block = from_block, per_page = per_page, next_page=next_page, contract = contract, event_type = event_type)
             # self.logger.info(res['events'][0])
             try:
                 self.bulk_insert(res['events'], NFTEvent)
                 next_page = res['next_page']
+                print(next_page)
                 self.logger.info(f'Added: {str(len(res["events"]))}')
             except Exception as e:
                 self.logger.error("unable to insert. Skipping entire block")
                 self.logger.error(e)
                 break
-            finally:
-                if not next_page:
-                    break
+            # finally:
+            if not next_page:
+                break
+
+    def insert_nft_events(self, collection_slug: str, event_type: str = 'transfer'):
+        self.logger.info(f"Adding {event_type} for {collection_slug}")
+        with Session(self.engine) as session:
+            collection: Collection = session.execute(
+                select(Collection)\
+                .where(Collection.opensea_slug == collection_slug)\
+                .limit(1)
+            ).scalars().first()
+            contracts = [i.model_dump() for i in collection.contracts]
+        
+        self.logger.info(contracts)
+        for contract in contracts:
+            self.logger.info(f"Contract: {contract}")
+            self.insert_nft_events_contract(collection_slug, contract, event_type)
     
     def insert_erc20_transfers(self, collection_slug: str):
         # etherscan = EtherScan()

@@ -19,6 +19,10 @@ import keys as keys
 from celery_config import celery_app as app
 from utils import load_collections_from_file
 
+from logging_config import setup_logging
+
+setup_logging()
+
 # engine = create_engine(os.environ.get("TIMESCALE_URL"))
 engine = create_engine(keys.timescale_url)
 # opensea = OpenSea()
@@ -219,7 +223,7 @@ def add_collection(collection_slug: str):
     injector.calculate_and_store_rr(game_id)
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level = logging.DEBUG)
+# logging.basicConfig(level = logging.DEBUG)
 
 # @app.task
 def add_all_collections(file_path: str):
@@ -231,6 +235,7 @@ def add_all_collections(file_path: str):
     # with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
     #     futures = [executor.submit(add_collection, collection) for collection in collections]
     #     concurrent.futures.wait(futures)
+    collections = ['decentraland']
     for c in collections:
         add_collection(c)
 
