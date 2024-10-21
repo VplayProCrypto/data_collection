@@ -207,9 +207,9 @@ class Injector:
         with Session(self.engine) as session:
             last_event = session.execute(
                 select(NFTEvent)
-                .where(NFTEvent.collection_slug == collection_slug)\
-                .where(NFTEvent.event_type == event_type)\
-                .where(NFTEvent.contract_address == contract['contract_address'])\
+                .where(NFTEvent.collection_slug == collection_slug)
+                .where(NFTEvent.event_type == event_type)
+                .where(func.lower(NFTEvent.contract_address) == func.lower(contract['contract_address']))
                 .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
         
         if last_event is None:
