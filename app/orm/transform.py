@@ -22,7 +22,7 @@ class Mapper:
         name = ""
         for i in self.games.keys():
             if i in collection_slug:
-                name = self.games[i]
+                name = self.games[i]['name']
         
         return name
     

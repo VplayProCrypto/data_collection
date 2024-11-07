@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Any
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import Column, Boolean, Integer, String, TIMESTAMP, ForeignKeyConstraint, JSON
+from pgvector.sqlalchemy import Vector
 from datetime import datetime
 import pytz
 
@@ -10,6 +11,7 @@ class Collection(SQLModel, table=True):
     opensea_slug: str = Field(primary_key=True)
     game_name: Optional[str]
     game_id: Optional[str]
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     name: str = Field(max_length=50)
     description: str
     owner: str
@@ -33,6 +35,8 @@ class Collection(SQLModel, table=True):
     payment_tokens: list["PaymentToken"] = Relationship(
         back_populates = 'collection'
     )
+    class Config:
+        arbitary_types_allowed = True
 
 
 class CollectionDynamic(SQLModel, table=True):
@@ -43,6 +47,7 @@ class CollectionDynamic(SQLModel, table=True):
     )
     game_id: Optional[str]
     total_average_price: Optional[float]
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     # total_supply: Optional[float]
     total_volume: Optional[float]
     total_num_owners: Optional[int]
@@ -71,17 +76,22 @@ class CollectionDynamic(SQLModel, table=True):
     rr_val: Optional[float]
     rr_symbol: Optional[str]
     event_timestamp: datetime = Field(primary_key=True, )
+    class Config:
+        arbitary_types_allowed = True
 
 
 class Contract(SQLModel, table=True):
     __tablename__ = "contract"
 
     collection_slug: str = Field(foreign_key="collection.opensea_slug")
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     contract_address: str = Field(primary_key=True)
     chain: str = Field(primary_key=True)
     collection: Collection = Relationship(
         back_populates = 'contracts'
     )
+    class Config:
+        arbitary_types_allowed = True
 
 
 class ERC20Transfer(SQLModel, table=True):
@@ -89,6 +99,7 @@ class ERC20Transfer(SQLModel, table=True):
 
     buyer: str
     seller: str
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     contract_address: str
     price: float
     symbol: str
@@ -96,6 +107,8 @@ class ERC20Transfer(SQLModel, table=True):
     transaction_hash: str = Field(primary_key=True)
     event_timestamp: datetime = Field(primary_key=True)
     collection_slug: Optional[str]
+    class Config:
+        arbitary_types_allowed = True
 
 
 class Fee(SQLModel, table=True):
@@ -105,10 +118,13 @@ class Fee(SQLModel, table=True):
         primary_key=True, foreign_key="collection.opensea_slug"
     )
     fee: float
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     recipient: str = Field(primary_key=True)
     collection: Collection = Relationship(
         back_populates = 'fees'
     )
+    class Config:
+        arbitary_types_allowed = True
 
 class NFT(SQLModel, table=True):
     __tablename__ = "nft"
@@ -117,6 +133,7 @@ class NFT(SQLModel, table=True):
     game_id: Optional[str]
     token_id: str = Field(primary_key=True)
     contract_address: str = Field(primary_key=True)
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     token_standard: str
     name: Optional[str]
     description: Optional[str]
@@ -127,6 +144,8 @@ class NFT(SQLModel, table=True):
     is_nsfw: bool = Field(default=False)
     is_disabled: bool = Field(default=False)
     traits: Optional[dict] = Field(sa_column=Column(JSON))
+    class Config:
+        arbitary_types_allowed = True
 
 
 class PaymentToken(SQLModel, table=True):
@@ -136,18 +155,22 @@ class PaymentToken(SQLModel, table=True):
         primary_key=True, foreign_key="collection.opensea_slug"
     )
     contract_address: str = Field(primary_key=True)
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     symbol: Optional[str]
     decimals: int
     chain: str
     collection: Collection = Relationship(
         back_populates = 'payment_tokens'
     )
+    class Config:
+        arbitary_types_allowed = True
 
 class NFTEvent(SQLModel, table=True):
     __tablename__ = "nft_events"
 
     transaction_hash: Optional[str]
     marketplace: Optional[str]
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     marketplace_address: Optional[str]
     block_number: Optional[int]
     order_hash: Optional[str]
@@ -163,6 +186,8 @@ class NFTEvent(SQLModel, table=True):
     price_currency: Optional[str]
     price_decimals: Optional[str]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
+    class Config:
+        arbitary_types_allowed = True
 
     # __table_args__ = (
     #     ForeignKeyConstraint(["token_id", "contract_address"], ["nft.token_id", "nft.contract_address"]),
@@ -173,10 +198,13 @@ class TokenPrice(SQLModel, table=True):
 
     contract_address: str = Field(primary_key=True)
     eth_price: float
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     usdt_price: float
     usdt_conversion_price: Optional[float]
     eth_conversion_price: Optional[float]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
+    class Config:
+        arbitary_types_allowed = True
 
 class NftOwnership(SQLModel, table=True):
     __tablename__ = "nft_ownership"
@@ -203,10 +231,13 @@ class NFTDynamic(SQLModel, table=True):
 
     collection_slug: str
     token_id: str = Field(primary_key=True)
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     contract_address: str = Field(primary_key=True)
     rr_val: Optional[float]
     rr_symbol: Optional[str]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
+    class Config:
+        arbitary_types_allowed = True
 
     # __table_args__ = (
     #     ForeignKeyConstraint(
@@ -222,6 +253,7 @@ class NFTOffer(SQLModel, table=True):
     token_id: str = Field(primary_key=True)
     contract_address: str = Field(primary_key=True)
     collection_slug: str
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     game_id: str
     seller: str
     quantity: Optional[int] = Field(default=1)
@@ -231,6 +263,8 @@ class NFTOffer(SQLModel, table=True):
     start_date: Optional[datetime]
     expiration_date: Optional[datetime]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
+    class Config:
+        arbitary_types_allowed = True
 
     # __table_args__ = (
     #     ForeignKeyConstraint(
@@ -246,6 +280,7 @@ class NFTListing(SQLModel, table=True):
     contract_address: str = Field(primary_key=True)
     collection_slug: str
     game_id: str
+    embedding: Any = Field(sa_column=Column(Vector(3)))
     seller: str
     price_val: Optional[str]
     price_currency: Optional[str]
@@ -253,6 +288,8 @@ class NFTListing(SQLModel, table=True):
     start_date: Optional[datetime]
     expiration_date: Optional[datetime]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
+    class Config:
+        arbitary_types_allowed = True
 
     # __table_args__ = (
     #     ForeignKeyConstraint(

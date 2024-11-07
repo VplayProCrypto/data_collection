@@ -84,6 +84,10 @@ class Injector:
     
     def get_insert_smt(self, new_data: List[dict], model, upsert: bool):
         insert_smt = insert(model).values(new_data)
+        # print('----------------------')
+        # print([i for i in new_data if i['event_timestamp'] is None][:5])
+        # print(new_data[:5])
+        # print('----------------------')
         index_columns = [key.name for key in inspect(model).primary_key]
         if upsert:
             # self.logger.info(index_columns)
@@ -95,6 +99,8 @@ class Injector:
 
     def bulk_insert(self, new_data: List[dict], model, upsert: bool = False):
         t = time.time()
+        if len(new_data) < 1:
+            return
         with Session(self.engine) as session:
             try:
                 session.execute(self.get_insert_smt(new_data, model, upsert))
@@ -238,8 +244,8 @@ class Injector:
                 self.logger.error("unable to insert. Skipping entire block")
                 self.logger.error(e)
                 break
-            # finally:
             if not next_page:
+                self.logger.info(f'All events retrieved for {collection_slug}:{contract}')
                 break
 
     def insert_nft_events(self, collection_slug: str, event_type: str = 'transfer'):

@@ -235,14 +235,16 @@ def add_all_collections(file_path: str):
     # with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
     #     futures = [executor.submit(add_collection, collection) for collection in collections]
     #     concurrent.futures.wait(futures)
-    collections = ['decentraland']
+    # collections = ['decentraland']
     for c in collections:
         add_collection(c)
 
 def init_db_new():
     sql_dir = os.path.join('db', 'raw_sql')
     # sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
+    # sql_files = [os.path.join(sql_dir, i) for i in ['indexes.sql']]
     # with Session(engine) as session:
+    #     session.exec(text('CREATE EXTENSION IF NOT EXISTS vector'))
     #     for sql_file in sql_files:
     #         with open(sql_file, "r") as file:
     #             sql = file.read()

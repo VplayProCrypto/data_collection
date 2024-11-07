@@ -19,3 +19,9 @@ DROP TABLE IF EXISTS public.contract cascade;
 DROP TABLE IF EXISTS public.collection_dynamic cascade;
 
 DROP TABLE IF EXISTS public.collection cascade;
+
+DROP TABLE IF EXISTS public.conversations cascade;
+
+DROP TABLE IF EXISTS public.messages cascade;
+
+DROP TABLE IF EXISTS public.documents cascade;

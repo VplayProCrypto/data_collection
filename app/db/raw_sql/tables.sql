@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS public.collection
 (
     opensea_slug character varying not null,
+    embedding vector,
     game_name character varying,
     game_id character varying,
     name character varying(50) not null,
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.collection
 CREATE TABLE IF NOT EXISTS public.collection_dynamic
 (
     collection_slug character varying not null,
+    embedding vector,
     game_id character varying,
     total_average_price double precision,
     -- total_supply double precision,
@@ -63,6 +65,7 @@ CREATE TABLE IF NOT EXISTS public.collection_dynamic
 CREATE TABLE IF NOT EXISTS public.contract
 (
     collection_slug character varying not null,
+    embedding vector,
     contract_address character varying not null,
     chain character varying not null,
     CONSTRAINT contract_pkey primary key (contract_address, chain),
@@ -75,6 +78,7 @@ CREATE TABLE IF NOT EXISTS public.contract
 CREATE TABLE IF NOT EXISTS public.erc20_transfers
 (
     buyer character varying not null,
+    embedding vector,
     seller character varying not null,
     contract_address text not null,
     price double precision not null,
@@ -89,6 +93,7 @@ CREATE TABLE IF NOT EXISTS public.erc20_transfers
 CREATE TABLE IF NOT EXISTS public.fee
 (
     collection_slug character varying not null,
+    embedding vector,
     fee double precision not null,
     recipient character varying not null,
     CONSTRAINT fee_pkey primary key (collection_slug, recipient),
@@ -101,6 +106,7 @@ CREATE TABLE IF NOT EXISTS public.fee
 CREATE TABLE IF NOT EXISTS public.nft
 (
     collection_slug character varying not null,
+    embedding vector,
     game_id character varying,
     token_id character varying not null,
     contract_address character varying not null,
@@ -124,6 +130,7 @@ CREATE TABLE IF NOT EXISTS public.nft
 CREATE TABLE IF NOT EXISTS public.payment_tokens
 (
     collection_slug character varying not null,
+    embedding vector,
     contract_address character varying not null,
     symbol character varying,
     decimals integer not null,
@@ -138,6 +145,7 @@ CREATE TABLE IF NOT EXISTS public.payment_tokens
 CREATE TABLE IF NOT EXISTS public.nft_events
 (
     transaction_hash character varying,
+    embedding vector,
     marketplace character varying,
     marketplace_address character varying,
     block_number bigint,
@@ -164,6 +172,7 @@ CREATE TABLE IF NOT EXISTS public.nft_events
 CREATE TABLE IF NOT EXISTS public.token_price
 (
     contract_address character varying not null,
+    embedding vector,
     eth_price double precision not null,
     usdt_price double precision not null,
     usdt_conversion_price double precision,
@@ -194,6 +203,7 @@ CREATE TABLE IF NOT EXISTS public.nft_ownership
 CREATE TABLE IF NOT EXISTS public.nft_dynamic
 (
     collection_slug character varying not null,
+    embedding vector,
     token_id character varying not null,
     contract_address character varying not null,
     rr_val numeric,
@@ -209,6 +219,7 @@ CREATE TABLE IF NOT EXISTS public.nft_dynamic
 CREATE TABLE IF NOT EXISTS public.nft_offers
 (
     order_hash character varying not null,
+    embedding vector,
     event_type text,
     token_id character varying not null,
     contract_address character varying not null,
@@ -232,6 +243,7 @@ CREATE TABLE IF NOT EXISTS public.nft_offers
 CREATE TABLE IF NOT EXISTS public.nft_listings
 (
     order_hash character varying not null,
+    embedding vector,
     token_id character varying not null,
     contract_address character varying not null,
     collection_slug character varying not null,
@@ -248,4 +260,32 @@ CREATE TABLE IF NOT EXISTS public.nft_listings
     --     REFERENCES public.nft (token_id, contract_address) match simple
     --     ON UPDATE NO ACTION
     --     ON DELETE NO ACTION
+);
+
+CREATE TABLE IF NOT EXISTS documents (
+    collection_slug character varying not null,
+    CID character varying not null,
+    content text,
+    embedding vector,
+    event_timestamp timestamp with time zone not null,
+    CONSTRAINT documents_pkey primary key (CID, event_timestamp),
+    CONSTRAINT documents_collection_slug_fkey FOREIGN KEY (collection_slug)
+        REFERENCES public.collection (opensea_slug) match simple
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+);
+
+CREATE TABLE conversations (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    conversation_id INTEGER REFERENCES conversations(id),
+    role VARCHAR(50) NOT NULL, -- e.g., 'human', 'ai'
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_summary BOOLEAN NOT NULL DEFAULT false
 );
