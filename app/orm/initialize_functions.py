@@ -241,15 +241,15 @@ def add_all_collections(file_path: str):
 
 def init_db_new():
     sql_dir = os.path.join('db', 'raw_sql')
-    # sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
+    sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
     # sql_files = [os.path.join(sql_dir, i) for i in ['indexes.sql']]
-    # with Session(engine) as session:
-    #     session.exec(text('CREATE EXTENSION IF NOT EXISTS vector'))
-    #     for sql_file in sql_files:
-    #         with open(sql_file, "r") as file:
-    #             sql = file.read()
-    #             session.exec(text(sql))
-    #     session.commit()
+    with Session(engine) as session:
+        session.exec(text('CREATE EXTENSION IF NOT EXISTS vector'))
+        for sql_file in sql_files:
+            with open(sql_file, "r") as file:
+                sql = file.read()
+                session.exec(text(sql))
+        session.commit()
     add_all_collections('games.json')
 
 
