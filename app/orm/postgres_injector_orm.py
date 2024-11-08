@@ -106,7 +106,7 @@ class Injector:
                 session.execute(self.get_insert_smt(new_data, model, upsert))
                 session.commit()
                 self.logger.info(f'Time Taken to insert: {time.time() - t}')
-                print(f'Time Taken to insert: {time.time() - t}')
+                # print(f'Time Taken to insert: {time.time() - t}')
             except ProgrammingError as e:
                 if isinstance(e.orig, psycopg2.errors.InFailedSqlTransaction):
                     # Rollback the session to exit the aborted state

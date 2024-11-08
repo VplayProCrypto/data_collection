@@ -4,11 +4,14 @@ from datetime import datetime
 import time
 from typing import List, Optional
 import pytz
+from logging import Logger
 from orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
 import keys
 import json
 from pprint import pprint
 from orm.transform import Mapper
+
+logger = Logger(__name__)
 
 def sell_time_correction(ownership: NftOwnership):
     if ownership.sell_time:
@@ -44,7 +47,7 @@ def calculate_average_buy_price(session: Session, ownership: NftOwnership) -> fl
 
 # Function to calculate ROI for each NFT
 def calculate_nft_roi(session: Session, game_id: str, games: dict):
-
+    t = time.time()
     token_contracts = [i.lower() for i in games[game_id]['erc20Tokens']]
     # Total earnings subquery
     total_earnings = (
@@ -91,7 +94,7 @@ def calculate_nft_roi(session: Session, game_id: str, games: dict):
     )
 
     results = session.exec(roi_query).all()
-
+    logger.info(f"NFT ROIs Calculated. Time taken {time.time() - t}")
     return [
         {
             'collection_slug': r.collection_slug,
@@ -159,6 +162,7 @@ def calculate_and_store_collection_roi(session: Session, game_id: str):
         #     .where(latest_nft_rois_subquery.c.row_num == 1)
         # ).all()
 
+        t = time.time()
         collection_rois = session.exec(
             select(
                 NFTDynamic.collection_slug,
@@ -168,6 +172,7 @@ def calculate_and_store_collection_roi(session: Session, game_id: str):
             .where(NFTDynamic.collection_slug == collection_slug)
             .group_by(NFTDynamic.collection_slug, NFTDynamic.rr_symbol)
         ).first()
+        logger.info(f"Collection ROI calculated for game {game_id}. Time taken {time.time() - t}")
 
         if not collection_rois:
             print(f"No collection roi present for {collection_slug}")

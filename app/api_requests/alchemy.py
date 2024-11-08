@@ -6,9 +6,12 @@ import argparse
 import time
 from datetime import datetime, date, timedelta
 from sqlmodel import Session
+from logging import Logger
 import keys
 from orm.models import NFT, NFTEvent
 # from utils import append_data_to_file
+
+logger = Logger(__name__)
 
 class Alchemy:
     def __init__(self):
@@ -54,11 +57,21 @@ class Alchemy:
         # print('--------------------------------------------------------------')
 
         response = requests.get(url, headers=self.headers, params=params).json()
+        try:
+            return_response = {
+                "sales": response['nftSales'],
+                "next_page": response["pageKey"]
+            }
+            return return_response
+        except KeyError as e:
+            logger.error(f"Unable to get Sales {response}")
+            raise e
+            # return {
+            #     "sales": [],
+            #     "next_page": None
+            # }
         # pprint(response.keys())
         # print(response.url)
-        
-
-        return {"sales": response['nftSales'], "next_page": response["pageKey"]}
     
     def get_nft_sales_new(
         self,
@@ -234,9 +247,18 @@ class Alchemy:
             payload["params"][0]["pageKey"] = next_page
 
         response = requests.post(url, headers=self.headers, json=payload).json()
+        try:
+            return_response = {"transfers": response['result']['transfers'], "next_page": response["result"].get("pageKey")}
+            return return_response
+        except KeyError as e:
+            logger.error(f"Unable to get Sales {response}")
+            raise e
+            # return {
+            #     "transfers": [],
+            #     "next_page": None
+            # }
         # pprint(response['result']['transfers'][0])
-        print(response.keys(), response['result'].keys())
-        return {"transfers": response['result']['transfers'], "next_page": response["result"].get("pageKey")}
+        # print(response.keys(), response['result'].keys())
     
     def get_nft_transfers_new(
         self,
