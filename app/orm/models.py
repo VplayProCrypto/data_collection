@@ -5,9 +5,7 @@ from pgvector.sqlalchemy import Vector
 from datetime import datetime
 import pytz
 
-class Collection(SQLModel, table=True):
-    __tablename__ = "collection"
-
+class CollectionBase(SQLModel):
     opensea_slug: str = Field(primary_key=True)
     game_name: Optional[str]
     game_id: Optional[str]
@@ -26,6 +24,12 @@ class Collection(SQLModel, table=True):
     instagram_url: Optional[str]
     created_date: datetime = Field(default=datetime.now(pytz.UTC))
     updated_at: datetime = Field(default=datetime.now(pytz.UTC))
+    class Config:
+        arbitary_types_allowed = True
+
+class Collection(CollectionBase, table=True):
+    __tablename__ = "collection"
+
     contracts: list["Contract"] = Relationship(
         back_populates = 'collection'
     )
@@ -79,14 +83,15 @@ class CollectionDynamic(SQLModel, table=True):
     class Config:
         arbitary_types_allowed = True
 
-
-class Contract(SQLModel, table=True):
-    __tablename__ = "contract"
-
+class ContractBase(SQLModel):
     collection_slug: str = Field(foreign_key="collection.opensea_slug")
     embedding: Any = Field(sa_column=Column(Vector(3)))
     contract_address: str = Field(primary_key=True)
     chain: str = Field(primary_key=True)
+
+class Contract(ContractBase, table=True):
+    __tablename__ = "contract"
+
     collection: Collection = Relationship(
         back_populates = 'contracts'
     )
@@ -111,15 +116,17 @@ class ERC20Transfer(SQLModel, table=True):
         arbitary_types_allowed = True
 
 
-class Fee(SQLModel, table=True):
-    __tablename__ = "fee"
-
+class FeeBase(SQLModel):
     collection_slug: str = Field(
         primary_key=True, foreign_key="collection.opensea_slug"
     )
     fee: float
     embedding: Any = Field(sa_column=Column(Vector(3)))
     recipient: str = Field(primary_key=True)
+
+class Fee(FeeBase, table=True):
+    __tablename__ = "fee"
+
     collection: Collection = Relationship(
         back_populates = 'fees'
     )
@@ -148,9 +155,7 @@ class NFT(SQLModel, table=True):
         arbitary_types_allowed = True
 
 
-class PaymentToken(SQLModel, table=True):
-    __tablename__ = "payment_tokens"
-
+class PaymentTokenBase(SQLModel):
     collection_slug: str = Field(
         primary_key=True, foreign_key="collection.opensea_slug"
     )
@@ -159,6 +164,10 @@ class PaymentToken(SQLModel, table=True):
     symbol: Optional[str]
     decimals: int
     chain: str
+
+class PaymentToken(PaymentTokenBase, table=True):
+    __tablename__ = "payment_tokens"
+
     collection: Collection = Relationship(
         back_populates = 'payment_tokens'
     )

@@ -58,7 +58,7 @@ def calculate_nft_roi(session: Session, game_id: str, games: dict):
             NftOwnership.buyer,
             (func.extract('epoch', func.coalesce(NftOwnership.sell_time, func.now()) - NftOwnership.buy_time) / (3600 * 24)).label('days_held'),
             ERC20Transfer.symbol,
-            func.avg(ERC20Transfer.price / func.pow(10, ERC20Transfer.decimals)).label('earnings')
+            func.sum(ERC20Transfer.price / func.pow(10, ERC20Transfer.decimals)).label('earnings')
         )
         .join(ERC20Transfer, ERC20Transfer.buyer == NftOwnership.buyer)
         .where(
