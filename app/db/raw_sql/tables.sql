@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.collection
     category character varying not null,
     is_nsfw boolean not null default false,
     entry_fee float not null default 0,
-    entry_fee_currency character varying(15) not null default "ETH"
+    entry_fee_currency character varying(15) not null default 'ETH'
     tags character varying,
     opensea_url character varying,
     project_url character varying,

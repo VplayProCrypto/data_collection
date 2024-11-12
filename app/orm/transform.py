@@ -41,7 +41,7 @@ class Mapper:
         collection_slug = collection_data['collection']
         game_name = self._get_game_name(collection_slug)
         game_id = self._get_game_id(collection_slug)
-        tags = self.games[game_id]
+        tags = ','.join(self.games[game_id]['tags'])
         # pprint(collection_data)
         return {
             'opensea_slug': collection_data['collection'],
@@ -52,6 +52,9 @@ class Mapper:
             'owner': collection_data['owner'],
             'category': collection_data['category'],
             'is_nsfw': collection_data['is_nsfw'],
+            'tags': tags,
+            'entry_fee': self.games[game_id]['entry_fee'],
+            'entry_fee_currency': self.games[game_id]['entry_fee_currency'],
             'opensea_url': collection_data['opensea_url'],
             'project_url': collection_data['project_url'],
             'wiki_url': collection_data['wiki_url'],
