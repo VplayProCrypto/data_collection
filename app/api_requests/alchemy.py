@@ -270,6 +270,26 @@ class Alchemy(BaseAPI):
         # pprint(response['result']['transfers'][0])
         # print(response.keys(), response['result'].keys())
     
+    def get_nft_metadata(self, nfts: list[NFT], chain: str = "eth-mainnet"):
+        url = self.get_chain_url(chain) + f'v3/{self.api_key}/getNFTMetadataBatch'
+        payload = {
+            'tokens': [
+                {
+                    'tokenId': i.token_id,
+                    'contractAddress': i.contract_address,
+                    'tokenType': i.token_standard
+                }
+                for i in nfts
+            ],
+            'refreshCache': False
+        }
+        try:
+            raw_response = self.session.post(url, json = payload)
+            raw_response.raise_for_status()
+            return raw_response.json()
+        except Exception as e:
+            logger.error("Error retreiveing NFT Traits")
+    
     def get_nft_transfers_new(
         self,
         contract_address: str,
