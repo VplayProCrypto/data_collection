@@ -1,20 +1,19 @@
-import requests
-import json
-import os
 from pprint import pprint
 import argparse
 import time
 from datetime import datetime, date, timedelta
 from sqlmodel import Session
 from orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
+from api_requests.base import BaseAPI
 import keys
 
 
-class OpenSea:
+class OpenSea(BaseAPI):
     # class to consume the open sea API
     def __init__(self, chain: str = None):
         # :params chain: chain to search for. Default = None for searching all chains
         # self.base_url = os.environ.get('OPENSEA_BASE_URL')
+        super().__init__()
         self.base_url = 'https://api.opensea.io/api/v2/'
         self.headers = {
             "accept": "application/json",
@@ -24,6 +23,7 @@ class OpenSea:
         # self.games = json.load(open('app/games.json'))
         # print(self.games)
         self.chain = chain
+        self.session.headers.update(self.headers)
 
     # def get_game_name(self, collection_slug: str, games: dict) -> str:
     #     for game_id in games.keys():
@@ -48,7 +48,7 @@ class OpenSea:
         ), "Please specify a collection slug"
 
         url = self.base_url + f"collections/{collection_slug}"
-        collection_data: dict = requests.get(url, headers=self.headers).json()
+        collection_data: dict = self.session.get(url, headers=self.headers).json()
         # pprint(collection_data)
         return collection_data
 
@@ -64,7 +64,7 @@ class OpenSea:
         ), "Please specify a collection slug"
 
         url = self.base_url + f"collections/{collection_slug}"
-        collection_data: dict = requests.get(url, headers=self.headers).json()
+        collection_data: dict = self.session.get(url, headers=self.headers).json()
         # pprint(collection_data)
 
         collection = Collection(
@@ -140,7 +140,7 @@ class OpenSea:
         if next_page != "start":
             params["next"] = next_page
 
-        response: dict = requests.get(url, params=params, headers=self.headers).json()
+        response: dict = self.session.get(url, params=params, headers=self.headers).json()
         # pprint(response)
 
         if response.get("nfts"):
@@ -188,7 +188,7 @@ class OpenSea:
         if next_page != "start":
             params["next"] = next_page
 
-        response: dict = requests.get(url, params=params, headers=self.headers).json()
+        response: dict = self.session.get(url, params=params, headers=self.headers).json()
 
         if response.get("listings"):
             for listing_data in response["listings"]:
@@ -260,7 +260,7 @@ class OpenSea:
             if next_page:
                 params["next"] = next_page
 
-            response: dict = requests.get(
+            response: dict = self.session.get(
                 url, params=params, headers=self.headers
             )
 
@@ -315,7 +315,7 @@ class OpenSea:
             if next_page:
                 params["next"] = next_page
 
-            response: dict = requests.get(
+            response: dict = self.session.get(
                 url, params=params, headers=self.headers
             ).json()
 
@@ -375,7 +375,7 @@ class OpenSea:
         for address in contracts:
             # pprint(url.format(address))
             # time.sleep(0.1)
-            collection = requests.get(url.format(address), headers=self.headers).json()[
+            collection = self.session.get(url.format(address), headers=self.headers).json()[
                 "collection"
             ]
             collections.add(collection)
@@ -409,7 +409,7 @@ class OpenSea:
         else:
             params["event_type"] = ["sale", "listing", "transfer"]
         t = time.time()
-        r = requests.get(url, params=params, headers=self.headers).json()
+        r = self.session.get(url, params=params, headers=self.headers).json()
         # pprint(r)
         e = r.get("asset_events")
         if e:
@@ -420,7 +420,7 @@ class OpenSea:
         i += 1
         print(f"retieived page {i}")
         while params["next"] and len(events) < max_recs:
-            r = requests.get(url, headers=self.headers, params=params).json()
+            r = self.session.get(url, headers=self.headers, params=params).json()
             e = r.get("asset_events")
             if e:
                 e = [i for i in e if self._filter_event(i, collection_slug)]
@@ -438,7 +438,7 @@ class OpenSea:
         assert(isinstance(collection_slug, str)), "Collection slug should be a string"
         url = self.base_url + f"collections/{collection_slug}/stats"
         try:
-            r = requests.get(url, headers = self.headers).json()
+            r = self.session.get(url, headers = self.headers).json()
             # pprint(r)
             return r
         except Exception as e:

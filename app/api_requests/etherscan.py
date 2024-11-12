@@ -1,5 +1,3 @@
-import requests
-import json
 import os
 from pprint import pprint
 import argparse
@@ -8,15 +6,16 @@ from datetime import datetime, date, timedelta
 from sqlmodel import create_engine, Session
 from sqlalchemy.engine import Engine
 from orm.models import ERC20Transfer
+from api_requests.base import BaseAPI
 import keys
 
 
-class EtherScan:
+class EtherScan(BaseAPI):
     def __init__(self):
-
-        self.api_key = os.environ.get("ETHERSCAN_API_KEY")
+        
+        super().__init__()
+        self.api_key = os.environ.get("ETHERSCAN_API_KEY") or keys.etherscan_api_key
         # self.base_url = os.environ.get("ETHERSCAN_BASE_URL")
-        self.api_key = keys.etherscan_api_key
         self.base_url = 'https://api.etherscan.io/api/'
         self.headers = {
             "accept": "application/json",
@@ -31,7 +30,7 @@ class EtherScan:
             "apiKey": self.api_key,
         }
 
-        r = requests.get(self.base_url, params=params).json()
+        r = self.session.get(self.base_url, params=params).json()
         return r["result"]
 
     def get_erc20_transfers(
@@ -52,7 +51,7 @@ class EtherScan:
             "startblock": str(block_num),
         }
 
-        response = requests.get(
+        response = self.session.get(
             self.base_url, headers=self.headers, params=params
         ).json()
         # print('-'*50)
@@ -95,7 +94,7 @@ class EtherScan:
             "startblock": str(block_num),
         }
 
-        response = requests.get(
+        response = self.session.get(
             self.base_url, headers=self.headers, params=params
         ).json()
 
@@ -138,7 +137,7 @@ class EtherScan:
             "startblock": str(block_num),
         }
 
-        response = requests.get(
+        response = self.session.get(
             self.base_url, headers=self.headers, params=params
         ).json()
 

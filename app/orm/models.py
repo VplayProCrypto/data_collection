@@ -15,6 +15,9 @@ class CollectionBase(SQLModel):
     owner: str
     category: str
     is_nsfw: bool = Field(default=False)
+    entry_fee: float
+    entry_fee_currency: str
+    tags: Optional[str]
     opensea_url: Optional[str]
     project_url: Optional[str]
     wiki_url: Optional[str]

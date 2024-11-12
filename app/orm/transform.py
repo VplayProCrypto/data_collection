@@ -18,6 +18,11 @@ class Mapper:
         with open(game_names_file) as f:
             self.games = json.loads(f.read())
     
+    def __del__(self):
+        del self.alchemy
+        del self.opensea
+        del self.ethscan
+    
     def _get_game_name(self, collection_slug: str):
         name = ""
         for i in self.games.keys():
@@ -36,6 +41,7 @@ class Mapper:
         collection_slug = collection_data['collection']
         game_name = self._get_game_name(collection_slug)
         game_id = self._get_game_id(collection_slug)
+        tags = self.games[game_id]
         # pprint(collection_data)
         return {
             'opensea_slug': collection_data['collection'],

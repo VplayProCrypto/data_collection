@@ -221,6 +221,7 @@ def add_collection(collection_slug: str):
     injector.insert_nft_events(collection_slug=collection_slug, event_type='transfer')
     injector.insert_erc20_transfers(collection_slug)
     injector.calculate_and_store_rr(game_id)
+    del injector
 
 logger = logging.getLogger(__name__)
 # logging.basicConfig(level = logging.DEBUG)

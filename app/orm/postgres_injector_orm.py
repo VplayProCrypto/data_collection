@@ -38,6 +38,9 @@ class Injector:
         self.mapper = Mapper(eth_api_key = eth_api_key, alchemy_api_key = alchemy_api_key)
         with open('games.json') as f:
             self.games = json.loads(f.read())
+    
+    def __del__(self):
+        del self.mapper
 
     
     def _save_next_page(self, file_path: str, next_page_link):
@@ -310,7 +313,7 @@ class Injector:
         with S(self.engine) as session:
             nft_rois = calculate_nft_roi(session, game_id, self.games)
             self.bulk_insert(nft_rois, NFTDynamic, upsert = False)
-            calculate_and_store_collection_roi(session, game_id)
+            calculate_and_store_collection_roi(session, game_id, self.mapper)
         
 
 def main():

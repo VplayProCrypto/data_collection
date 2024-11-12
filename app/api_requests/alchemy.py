@@ -1,22 +1,24 @@
-import requests
-import json
+# import requests
+from requests import HTTPError, Session
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 import os
 from pprint import pprint
-import argparse
 import time
 from datetime import datetime, date, timedelta
-from sqlmodel import Session
+# from sqlmodel import Session
 from logging import Logger
 import keys
 from orm.models import NFT, NFTEvent
+from api_requests.base import BaseAPI
 # from utils import append_data_to_file
 
 logger = Logger(__name__)
 
-class Alchemy:
+class Alchemy(BaseAPI):
     def __init__(self):
-        self.api_key = os.environ.get("ALCHEMY_API_KEY")
-        self.api_key = keys.alchemy_api_key
+        super().__init__()
+        self.api_key = os.environ.get("ALCHEMY_API_KEY") or keys.alchemy_api_key
         self.base_url = "https://{chain}.g.alchemy.com/"
         self.headers = {"accept": "application/json"}
         self.supported_chains = [
@@ -26,7 +28,17 @@ class Alchemy:
             "starknet-mainnet",
             "opt-mainnet",
         ]
+        self.session.headers.update(self.headers)
+    
+    def __del__(self):
+        self.session.close()
 
+    def get_chain_url(self, chain: str):
+        if chain in self.supported_chains:
+            return self.base_url.format(chain = chain)
+        else:
+            raise ValueError(f"Unsupported chain: {chain}. The supported chains for Alchemy are {self.supported_chains}")
+    
     def get_nft_sales(
         self,
         contract_address: str,
@@ -35,11 +47,11 @@ class Alchemy:
         chain: str = "eth-mainnet",
         per_page: int = 1000
     ):
-        assert (
-            chain in self.supported_chains
-        ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+        # assert (
+        #     chain in self.supported_chains
+        # ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
 
-        url = self.base_url.format(chain=chain) + f"nft/v3/{self.api_key}/getNFTSales"
+        url = self.get_chain_url(chain=chain) + f"nft/v3/{self.api_key}/getNFTSales"
 
         params = {
             "contractAddress": contract_address,
@@ -56,22 +68,19 @@ class Alchemy:
         # pprint(params)
         # print('--------------------------------------------------------------')
 
-        response = requests.get(url, headers=self.headers, params=params).json()
+        # raw_response = self.session.get(url, headers=self.headers, params=params)
         try:
+            raw_response = self.session.get(url, params=params)
+            raw_response.raise_for_status()
+            response = raw_response.json()
             return_response = {
                 "sales": response['nftSales'],
                 "next_page": response["pageKey"]
             }
             return return_response
-        except KeyError as e:
-            logger.error(f"Unable to get Sales {response}")
-            raise e
-            # return {
-            #     "sales": [],
-            #     "next_page": None
-            # }
-        # pprint(response.keys())
-        # print(response.url)
+        except Exception as e:
+            logger.error(f"Unable to get Sales {raw_response}")
+            raise
     
     def get_nft_sales_new(
         self,
@@ -100,7 +109,7 @@ class Alchemy:
         if next_page:
             params["pageKey"] = next_page
 
-        response = requests.get(url, headers=self.headers, params=params).json()
+        response = self.session.get(url, headers=self.headers, params=params).json()
 
         sales = [
             NFTEvent(
@@ -159,7 +168,7 @@ class Alchemy:
 
 
         while True:
-            response: dict = requests.get(url, headers=self.headers, params=params).json()
+            response: dict = self.session.get(url, headers=self.headers, params=params).json()
             if response.get("nftSales"):
                 for sale_data in response["nftSales"]:
                     # print(datetime.fromtimestamp(self.timestamp_from_block(sale_data["blockNumber"])))
@@ -216,15 +225,15 @@ class Alchemy:
         chain: str = "eth-mainmet",
         next_page: str | None = None
     ):
-        assert (
-            chain in self.supported_chains
-        ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
+        # assert (
+        #     chain in self.supported_chains
+        # ), "Chain not supported. Valid options: eth-mainnet, polygon-mainnet, arb-mainnet, starknet-mainnet, opt-mainnet"
 
         max_count = hex(per_page)
         from_block_hex = hex(from_block)
         category = ["erc721", "erc1155", "specialnft"]
 
-        url = self.base_url.format(chain=chain) + f"v2/{self.api_key}"
+        url = self.get_chain_url(chain=chain) + f"v2/{self.api_key}"
 
         payload = {
             "id": 1,
@@ -246,7 +255,8 @@ class Alchemy:
         if next_page:
             payload["params"][0]["pageKey"] = next_page
 
-        response = requests.post(url, headers=self.headers, json=payload).json()
+        # response = self.session.post(url, headers=self.headers, json=payload).json()
+        response = self.session.post(url, json=payload).json()
         try:
             return_response = {"transfers": response['result']['transfers'], "next_page": response["result"].get("pageKey")}
             return return_response
@@ -300,7 +310,7 @@ class Alchemy:
         if next_page:
             payload["params"][0]["pageKey"] = next_page
 
-        response = requests.post(url, headers=self.headers, json=payload).json()
+        response = self.session.post(url, headers=self.headers, json=payload).json()
 
         transfers = []
 
@@ -393,7 +403,7 @@ class Alchemy:
         if next_page != "start":
             payload["params"][0]["pageKey"] = next_page
 
-        response = requests.post(url, headers=self.headers, json=payload).json()
+        response = self.session.post(url, headers=self.headers, json=payload).json()
 
         if response["result"].get("transfers"):
             for transfer_data in response["result"]["transfers"]:
@@ -473,7 +483,7 @@ class Alchemy:
             "method": "eth_getBlockByNumber",
             "params": [hex(block_num), False],
         }
-        r = requests.post(url, headers=self.headers, json=payload).json()
+        r = self.session.post(url, headers=self.headers, json=payload).json()
         t = int(r["result"]["timestamp"], 16)
         # print('-'*100)
         # print('timestamp from block')

@@ -127,7 +127,7 @@ def calculate_collection_sale_stats(session: Session, collection_slug: str):
     return res
 
 # Function to calculate and store ROI for each collection within the specified game
-def calculate_and_store_collection_roi(session: Session, game_id: str):
+def calculate_and_store_collection_roi(session: Session, game_id: str, mapper: Mapper):
     # Get all collections within the specified game
     collections = session.exec(
         select(Collection.opensea_slug).where(Collection.game_id == game_id)
@@ -193,7 +193,7 @@ def calculate_and_store_collection_roi(session: Session, game_id: str):
         # tot_avg_price = calculate_average_buy_price(session)
         
         total_sales, total_volume, total_average_price = calculate_collection_sale_stats(session, collection_slug)
-        other_stats = Mapper().get_collection_stats(collection_slug)
+        other_stats = mapper.get_collection_stats(collection_slug)
         if collection_rois:
             if collection_dynamic:
                 collection_dynamic.roi = avg_collection_roi
