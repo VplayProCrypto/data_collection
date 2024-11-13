@@ -3,9 +3,9 @@ import argparse
 import time
 from datetime import datetime, date, timedelta
 from sqlmodel import Session
-from orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
-from api_requests.base import BaseAPI
-import keys
+from app.orm.models import Collection, Fee, Contract, NFT, PaymentToken, NFTListing
+from app.api_requests.base import BaseAPI
+import app.keys as keys
 
 
 class OpenSea(BaseAPI):

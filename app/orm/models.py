@@ -136,9 +136,7 @@ class Fee(FeeBase, table=True):
     class Config:
         arbitary_types_allowed = True
 
-class NFT(SQLModel, table=True):
-    __tablename__ = "nft"
-
+class NFTWithoutStatus(SQLModel):
     collection_slug: str = Field(foreign_key="collection.opensea_slug")
     game_id: Optional[str]
     token_id: str = Field(primary_key=True)
@@ -156,6 +154,12 @@ class NFT(SQLModel, table=True):
     traits: Optional[dict] = Field(sa_column=Column(JSON))
     class Config:
         arbitary_types_allowed = True
+
+class NFT(NFTWithoutStatus, table=True):
+    __tablename__ = "nft"
+
+    status: str = Field(default = "missing traits")
+
 
 
 class PaymentTokenBase(SQLModel):

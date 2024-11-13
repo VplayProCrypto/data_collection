@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS public.nft
     is_nsfw boolean not null default false,
     is_disabled boolean not null default false,
     traits jsonb,
+    status character varying not null default 'missing traits',
     CONSTRAINT nft_pkey primary key (token_id, contract_address),
     CONSTRAINT nft_opensea_slug_fkey FOREIGN KEY (collection_slug)
         REFERENCES public.collection (opensea_slug) match simple

@@ -7,6 +7,7 @@ from .routers import collection, nft
 
 app = FastAPI()
 app.include_router(collection.router)
+app.include_router(nft.router)
 
 # @app.get('/collections/all')
 # async def get_collections(filters: filterDeps) -> list[Collection]:

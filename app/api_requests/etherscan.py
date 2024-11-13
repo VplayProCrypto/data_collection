@@ -5,14 +5,14 @@ import time
 from datetime import datetime, date, timedelta
 from sqlmodel import create_engine, Session
 from sqlalchemy.engine import Engine
-from orm.models import ERC20Transfer
-from api_requests.base import BaseAPI
-import keys
+from app.orm.models import ERC20Transfer
+from app.api_requests.base import BaseAPI
+import app.keys as keys
 
 
 class EtherScan(BaseAPI):
     def __init__(self):
-        
+
         super().__init__()
         self.api_key = os.environ.get("ETHERSCAN_API_KEY") or keys.etherscan_api_key
         # self.base_url = os.environ.get("ETHERSCAN_BASE_URL")

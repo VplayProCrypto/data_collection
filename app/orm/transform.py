@@ -2,15 +2,16 @@ import json
 import time
 
 from datetime import datetime, timedelta
+from dateutil import parser
 from pprint import pprint
 from copy import deepcopy
-from api_requests.alchemy import Alchemy
-from api_requests.opensea import OpenSea
-from api_requests.etherscan import EtherScan
-from utils import unflatten_nested_lists
+from app.api_requests.alchemy import Alchemy
+from app.api_requests.opensea import OpenSea
+from app.api_requests.etherscan import EtherScan
+from app.utils import unflatten_nested_lists
 
 class Mapper:
-    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "games.json"):
+    def __init__(self, eth_api_key: str = None, alchemy_api_key: str = None, game_names_file: str = "app/games.json"):
         self.opensea = OpenSea()
         self.ethscan = EtherScan()
         self.alchemy = Alchemy()
@@ -115,6 +116,32 @@ class Mapper:
         
         mapped_event['game_id'] = self._get_game_id(mapped_event['collection_slug'])
         return mapped_event
+    
+    def map_alchemy_nft(self, nft_data: dict, collection_slug: str):
+        # collection_slug = nft_data['collection']
+        # pprint(nft_data)
+        game_id = self._get_game_id(collection_slug)
+        traits = nft_data.get('raw').get('metadata').get('traits', None)
+        if not traits:
+            traits = nft_data.get('raw').get('metadata').get('attributes', None)
+        return {
+            'collection_slug': collection_slug,
+            'token_id': nft_data['tokenId'],
+            'game_id': game_id,
+            'contract_address': nft_data['contract']['address'],
+            'name': nft_data['name'],
+            'description': nft_data['description'],
+            'image_url': nft_data['image']['originalUrl'],
+            'metadata_url': nft_data['tokenUri'],
+            'opensea_url': None,
+            # 'opensea_url': nft_data['raw']['metadata']['external_url'],
+            # 'is_nsfw': nft_data['is_nsfw'],
+            # 'is_disabled': nft_data['is_disabled'],
+            'traits': traits,
+            'token_standard': nft_data['tokenType'],
+            'updated_at': datetime.fromisoformat(nft_data['timeLastUpdated'].replace('Z', '+00:00'))
+        }
+
     
     def map_alchemy_nft_sale(self, sale_data: dict, collection_slug: str, game_id: str):
         # pprint(sale_data)
@@ -286,7 +313,10 @@ class Mapper:
     
     def get_nfts_for_collection(self, collection_slug: str, num_pages: int = 10, next_page: str = None):
         r = self.opensea.get_nfts_for_collection(collection_slug, num_pages = num_pages, next_page = next_page)
+        # r = self.alchemy.get_nfts(collection_slug, chain = 'eth-mainnet', next_page = next_page)
         r['nfts'] = [self.map_opensea_nft(i) for i in r['nfts']]
+        # print(r['nfts'][0])
+        # r['nfts'] = [self.map_alchemy_nft(i, collection_slug=collection_slug) for i in r['nfts']]
         return r
     
     def map_chain_to_alchemy_chain(self, chain: str):

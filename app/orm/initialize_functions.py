@@ -8,18 +8,18 @@ import logging
 
 
 from .models import CollectionDynamic
-from api_requests.dappradar import get_uaw_from_dappradar
-from api_requests.discord import get_guild_member_count
-from api_requests.twitter import get_user_public_metrics
-from api_requests.alchemy import Alchemy
-from api_requests.etherscan import EtherScan
-from api_requests.opensea import OpenSea
-from .postgres_injector_orm import Injector
-import keys as keys
-from celery_config import celery_app as app
-from utils import load_collections_from_file
+from app.api_requests.dappradar import get_uaw_from_dappradar
+from app.api_requests.discord import get_guild_member_count
+from app.api_requests.twitter import get_user_public_metrics
+from app.api_requests.alchemy import Alchemy
+from app.api_requests.etherscan import EtherScan
+from app.api_requests.opensea import OpenSea
+from app.orm.postgres_injector_orm import Injector
+import app.keys as keys
+from app.celery_config import celery_app as app
+from app.utils import load_collections_from_file
 
-from logging_config import setup_logging
+from app.logging_config import setup_logging
 
 setup_logging()
 

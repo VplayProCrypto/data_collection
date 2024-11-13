@@ -7,13 +7,13 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
 from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
     NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee, NFTDynamic
-from api_requests.etherscan import EtherScan
-import keys
-from .rr import calculate_nft_roi, calculate_and_store_collection_roi
-from logging_config import setup_logging
+from app.api_requests.etherscan import EtherScan
+import app.keys as keys
+from app.orm.rr import calculate_nft_roi, calculate_and_store_collection_roi
+from app.logging_config import setup_logging
 import psycopg2
 import argparse
-from .transform import Mapper
+from app.orm.transform import Mapper
 import time
 import json
 import logging
@@ -36,7 +36,7 @@ class Injector:
         self.url = keys.timescale_url
         self.engine = create_engine(self.url)
         self.mapper = Mapper(eth_api_key = eth_api_key, alchemy_api_key = alchemy_api_key)
-        with open('games.json') as f:
+        with open('app/games.json') as f:
             self.games = json.loads(f.read())
     
     def __del__(self):

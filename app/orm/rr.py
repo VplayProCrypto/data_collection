@@ -5,11 +5,11 @@ import time
 from typing import List, Optional
 import pytz
 from logging import Logger
-from orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
-import keys
 import json
 from pprint import pprint
-from orm.transform import Mapper
+from app.orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
+import app.keys as keys
+from app.orm.transform import Mapper
 
 logger = Logger(__name__)
 

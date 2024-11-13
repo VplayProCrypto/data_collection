@@ -8,9 +8,9 @@ import time
 from datetime import datetime, date, timedelta
 # from sqlmodel import Session
 from logging import Logger
-import keys
-from orm.models import NFT, NFTEvent
-from api_requests.base import BaseAPI
+import app.keys as keys
+from app.orm.models import NFT, NFTEvent
+from app.api_requests.base import BaseAPI
 # from utils import append_data_to_file
 
 logger = Logger(__name__)
@@ -38,6 +38,44 @@ class Alchemy(BaseAPI):
             return self.base_url.format(chain = chain)
         else:
             raise ValueError(f"Unsupported chain: {chain}. The supported chains for Alchemy are {self.supported_chains}")
+    
+    def get_nfts(self, collection_slug: str, chain: str = "eth-mainnet", next_page: str = '0x0', limit: int = 100):
+        if limit > 100:
+            logger.warning("Limit provided exceeds 100: {limit}. Capping at 100 records per request")
+            limit = 100
+        url = self.get_chain_url(chain) + f'nft/v3/{self.api_key}/getNFTsForCollection'
+        params = {
+            'collectionSlug': collection_slug,
+            'startToken': next_page,
+            'limit': limit,
+            'withMetadata': True,
+            'tokenUriTimeoutInMs': 5000
+        }
+        try:
+            raw_response = self.session.get(url, params = params)
+            raw_response.raise_for_status()
+            response = raw_response.json()
+            return {
+                'nfts': response['nfts'],
+                'next_pages': [response['pageKey']]
+            }
+        except Exception as e:
+            logger.error(f"Unable to retrive the NFTs {e}")
+            raise
+    
+    def get_nft_rarity(self, token_id: str, contract_address: str, chain: str = 'eth-mainnet'):
+        url = self.get_chain_url(chain = chain) + f'nft/v3/{self.api_key}/computeRarity'
+        params = {
+            'contractAddress': contract_address,
+            'tokenId': token_id
+        }
+        try:
+            raw_response = self.session.get(url, params = params)
+            raw_response.raise_for_status()
+            return raw_response.json()
+        except Exception as e:
+            logger.error(f"Error retreiving NFT Rarity {e}")
+            raise
     
     def get_nft_sales(
         self,
