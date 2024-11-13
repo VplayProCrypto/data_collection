@@ -100,14 +100,14 @@ class Mapper:
         elif mapped_event['event_type'] == 'transfer':
             mapped_event['transaction_hash'] = event_data['transaction']
             mapped_event['token_id'] = event_data['nft']['identifier']
-            mapped_event['contract_address'] = event_data['nft']['contract']
+            mapped_event['contract_address'] = event_data['nft']['contract'].lower()
             mapped_event['collection_slug'] = event_data['nft']['collection']
             mapped_event['buyer'] = event_data['to_address']
             mapped_event['seller'] = event_data['from_address']
         elif mapped_event['event_type'] == 'order':
             mapped_event['event_type'] = 'listing'
             mapped_event['token_id'] = event_data['asset']['identifier']
-            mapped_event['contract_address'] = event_data['asset']['contract']
+            mapped_event['contract_address'] = event_data['asset']['contract'].lower()
             mapped_event['collection_slug'] = event_data['asset']['collection']
             mapped_event['seller'] = event_data['maker']
             mapped_event['start_date'] = datetime.fromtimestamp(event_data['start_date'])
@@ -128,7 +128,7 @@ class Mapper:
             'collection_slug': collection_slug,
             'token_id': nft_data['tokenId'],
             'game_id': game_id,
-            'contract_address': nft_data['contract']['address'],
+            'contract_address': nft_data['contract']['address'].lower(),
             'name': nft_data['name'],
             'description': nft_data['description'],
             'image_url': nft_data['image']['originalUrl'],
@@ -167,7 +167,7 @@ class Mapper:
         mapped_event['event_timestamp'] = datetime.fromtimestamp(self.alchemy.timestamp_from_block(sale_data['blockNumber']))
         mapped_event['transaction_hash'] = sale_data['transactionHash']
         mapped_event['token_id'] = sale_data['tokenId']
-        mapped_event['contract_address'] = sale_data['contractAddress']
+        mapped_event['contract_address'] = sale_data['contractAddress'].lower()
         mapped_event['collection_slug'] = collection_slug
         mapped_event['marketplace'] = sale_data['marketplace']
         mapped_event['marketplace_address'] = sale_data['marketplaceAddress']
@@ -209,7 +209,7 @@ class Mapper:
         mapped_event['block_number'] = int(transfer_data['blockNum'], 16)
         mapped_event['collection_slug'] = collection_slug
         mapped_event['game_id'] = game_id
-        mapped_event['contract_address'] = transfer_data['rawContract']['address']
+        mapped_event['contract_address'] = transfer_data['rawContract']['address'].lower()
         if transfer_data['category'] == 'erc721':
             mapped_event['token_id'] = str(int(transfer_data['erc721TokenId'], 16))
             mapped_event['quantity'] = 1
@@ -228,7 +228,7 @@ class Mapper:
     def map_opensea_contract(self, contract_data: dict, collection_slug: str):
         return {
             'collection_slug': collection_slug,
-            'contract_address': contract_data['address'],
+            'contract_address': contract_data['address'].lower(),
             'chain': contract_data['chain']
         }
     
@@ -236,7 +236,7 @@ class Mapper:
         return {
             'buyer': transfer_data['to'],
             'seller': transfer_data['from'],
-            'contract_address': transfer_data['contractAddress'],
+            'contract_address': transfer_data['contractAddress'].lower(),
             'price': transfer_data['value'],
             'symbol': transfer_data['tokenSymbol'],
             'decimals': int(transfer_data['tokenDecimal']),
@@ -249,7 +249,7 @@ class Mapper:
         return {
             'collection_slug': collection_slug,
             'fee': fee_data['fee'],
-            'recipient': fee_data['recipient'],
+            'recipient': fee_data['recipient'].lower(),
         }
     
     def map_opensea_nft(self, nft_data: dict):
@@ -259,7 +259,7 @@ class Mapper:
             'collection_slug': nft_data['collection'],
             'token_id': nft_data['identifier'],
             'game_id': game_id,
-            'contract_address': nft_data['contract'],
+            'contract_address': nft_data['contract'].lower(),
             'name': nft_data['name'],
             'description': nft_data['description'],
             'image_url': nft_data['image_url'],
@@ -268,14 +268,14 @@ class Mapper:
             'is_nsfw': nft_data['is_nsfw'],
             'is_disabled': nft_data['is_disabled'],
             # 'traits': nft_data[''],
-            'token_standard': nft_data['token_standard'],
+            'token_standard': nft_data['token_standard'].lower(),
             'updated_at': datetime.fromisoformat(nft_data['updated_at'])
         }
     
     def map_payment_tokens(self, token_data: dict):
         return {
             'collection_slug': token_data['collection_slug'],
-            'contract_address': token_data['contract_address'],
+            'contract_address': token_data['contract_address'].lower(),
             'symbol': token_data['symbol'],
             'decimals': token_data['decimals'],
             'chain': token_data['chain'],

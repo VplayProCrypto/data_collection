@@ -241,7 +241,7 @@ def add_all_collections(file_path: str):
         add_collection(c)
 
 def init_db_new():
-    sql_dir = os.path.join('db', 'raw_sql')
+    sql_dir = os.path.join('app', 'db', 'raw_sql')
     sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
     # sql_files = [os.path.join(sql_dir, i) for i in ['indexes.sql']]
     with Session(engine) as session:

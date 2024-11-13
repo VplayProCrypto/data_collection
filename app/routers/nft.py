@@ -64,7 +64,13 @@ async def get_nft_dynamic_batch(contract_address: str, nfts: list[str], session:
             order by token_id, event_timestamp desc;
     """
 
-    
+    stats = session.exec(
+        text(query),
+        {
+            'contract_address': contract_address,
+            'token_ids': nfts
+        }
+    )
     # try:
     #     stats = session.exec(
     #         select(NFTDynamic)
