@@ -11,7 +11,7 @@ router = APIRouter(
 
 class CollectionWithRelationships(CollectionBase):
     contracts: list[ContractBase]
-    fees: list[FeeBase]
+    # fees: list[FeeBase]
     payment_tokens: list[PaymentTokenBase]
 
 @router.get('/all/')
