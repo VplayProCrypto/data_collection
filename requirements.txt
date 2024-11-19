@@ -9,3 +9,8 @@ urllib3
 tweepy
 aiohttp
 pgvector
+celery
+flower
+tenacity
+pyspark
+asyncpg

@@ -1,13 +1,14 @@
 import json
 import time
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from dateutil import parser
 from pprint import pprint
 from copy import deepcopy
 from app.api_requests.alchemy import Alchemy
 from app.api_requests.opensea import OpenSea
 from app.api_requests.etherscan import EtherScan
+from app.api_requests.base import BaseAPI
 from app.utils import unflatten_nested_lists
 
 class Mapper:
@@ -15,14 +16,24 @@ class Mapper:
         self.opensea = OpenSea()
         self.ethscan = EtherScan()
         self.alchemy = Alchemy()
+        self.base = BaseAPI()
+        # self.opensea = OpenSea()
+        # self.ethscan = EtherScan()
+        # self.alchemy = Alchemy()
+        # self.base = BaseAPI()
         
         with open(game_names_file) as f:
             self.games = json.loads(f.read())
     
-    def __del__(self):
-        del self.alchemy
-        del self.opensea
-        del self.ethscan
+    def close_sessions(self):
+        self.alchemy.close_session()
+        self.opensea.close_session()
+        self.ethscan.close_session()
+    
+    # def __del__(self):
+    #     del self.alchemy
+    #     del self.opensea
+    #     del self.ethscan
     
     def _get_game_name(self, collection_slug: str):
         name = ""
@@ -36,6 +47,15 @@ class Mapper:
         for i in self.games.keys():
             if i in collection_slug:
                 return i
+    
+    def _get_timezone_aware_date(self, date_str_int: str | int):
+        if isinstance(date_str_int, str):
+            date_iso = datetime.fromisoformat(date_str_int)
+        elif isinstance(date_str_int, int):
+            date_iso = datetime.fromtimestamp(date_str_int)
+        if date_iso.tzinfo is None:
+            date_iso = date_iso.replace(tzinfo=timezone.utc)
+        return date_iso
     
     
     def map_opensea_collection(self, collection_data: dict):
@@ -63,7 +83,7 @@ class Mapper:
             'telegram_url': collection_data['telegram_url'],
             'twitter_url': collection_data['twitter_username'],
             'instagram_url': collection_data['instagram_username'],
-            'created_date': datetime.fromisoformat(collection_data['created_date'])
+            'created_date': self._get_timezone_aware_date(collection_data['created_date'])
         }
     
     def map_opensea_nft_event(self, event_data: dict):
@@ -85,7 +105,7 @@ class Mapper:
             'collection_slug': None
         }
         mapped_event['event_type'] = event_data['event_type']
-        mapped_event['event_timestamp'] = datetime.fromtimestamp(event_data['event_timestamp'])
+        mapped_event['event_timestamp'] = self._get_timezone_aware_date(event_data['event_timestamp'])
         mapped_event['quantity'] = event_data['quantity']
         if mapped_event['event_type'] == 'sale':
             mapped_event['transaction_hash'] = event_data['transaction']
@@ -96,7 +116,7 @@ class Mapper:
             mapped_event['seller'] = event_data['seller']
             mapped_event['price_val'] = event_data['payment']['quantity']
             mapped_event['price_symbol'] = event_data['payment']['symbol']
-            mapped_event['price_decimals'] = event_data['payment']['decimals']
+            mapped_event['price_decimals'] = int(event_data['payment']['decimals'])
         elif mapped_event['event_type'] == 'transfer':
             mapped_event['transaction_hash'] = event_data['transaction']
             mapped_event['token_id'] = event_data['nft']['identifier']
@@ -110,9 +130,9 @@ class Mapper:
             mapped_event['contract_address'] = event_data['asset']['contract'].lower()
             mapped_event['collection_slug'] = event_data['asset']['collection']
             mapped_event['seller'] = event_data['maker']
-            mapped_event['start_date'] = datetime.fromtimestamp(event_data['start_date'])
+            mapped_event['start_date'] = self._get_timezone_aware_date(event_data['start_date'])
             t = event_data['expiration_date']
-            mapped_event['expiration_date'] = datetime.fromtimestamp(t) if t else None
+            mapped_event['expiration_date'] = self._get_timezone_aware_date(t) if t else None
         
         mapped_event['game_id'] = self._get_game_id(mapped_event['collection_slug'])
         return mapped_event
@@ -139,11 +159,11 @@ class Mapper:
             # 'is_disabled': nft_data['is_disabled'],
             'traits': traits,
             'token_standard': nft_data['tokenType'],
-            'updated_at': datetime.fromisoformat(nft_data['timeLastUpdated'].replace('Z', '+00:00'))
+            'updated_at': self._get_timezone_aware_date(nft_data['timeLastUpdated'].replace('Z', '+00:00'))
         }
 
     
-    def map_alchemy_nft_sale(self, sale_data: dict, collection_slug: str, game_id: str):
+    def map_alchemy_nft_sale(self, sale_data: dict, collection_slug: str, game_id: str, timestamp: int):
         # pprint(sale_data)
         mapped_event = {
             'transaction_hash': None,
@@ -164,7 +184,7 @@ class Mapper:
             'marketplace_address': None
         }
         mapped_event['event_type'] = 'sale'
-        mapped_event['event_timestamp'] = datetime.fromtimestamp(self.alchemy.timestamp_from_block(sale_data['blockNumber']))
+        mapped_event['event_timestamp'] = self._get_timezone_aware_date(timestamp)
         mapped_event['transaction_hash'] = sale_data['transactionHash']
         mapped_event['token_id'] = sale_data['tokenId']
         mapped_event['contract_address'] = sale_data['contractAddress'].lower()
@@ -176,13 +196,13 @@ class Mapper:
         mapped_event['seller'] = sale_data['sellerAddress']
         mapped_event['price_val'] = sale_data['sellerFee']['amount']
         mapped_event['price_currency'] = sale_data['sellerFee']['symbol']
-        mapped_event['price_decimals'] = sale_data['sellerFee']['decimals']
+        mapped_event['price_decimals'] = int(sale_data['sellerFee']['decimals'])
         mapped_event['block_number'] = sale_data['blockNumber']
         mapped_event['quantity'] = int(sale_data['quantity'])
 
         return mapped_event
     
-    def map_alchemy_nft_transfer(Self, transfer_data: dict, collection_slug: str, game_id: str):
+    def map_alchemy_nft_transfer(self, transfer_data: dict, collection_slug: str, game_id: str):
         mapped_event = {
             'transaction_hash': None,
             'token_id': None,
@@ -202,7 +222,7 @@ class Mapper:
             'marketplace_address': None
         }
         mapped_event['event_type'] = 'transfer'
-        mapped_event['event_timestamp'] = datetime.fromisoformat(transfer_data['metadata']['blockTimestamp'][:-1])
+        mapped_event['event_timestamp'] = self._get_timezone_aware_date(transfer_data['metadata']['blockTimestamp'][:-1])
         mapped_event['buyer'] = transfer_data['to']
         mapped_event['seller'] = transfer_data['from']
         mapped_event['transaction_hash'] = transfer_data['hash']
@@ -237,11 +257,11 @@ class Mapper:
             'buyer': transfer_data['to'],
             'seller': transfer_data['from'],
             'contract_address': transfer_data['contractAddress'].lower(),
-            'price': transfer_data['value'],
+            'price': float(transfer_data['value']),
             'symbol': transfer_data['tokenSymbol'],
             'decimals': int(transfer_data['tokenDecimal']),
             'transaction_hash': transfer_data['hash'],
-            'event_timestamp': datetime.fromtimestamp(int(transfer_data['timeStamp'])),
+            'event_timestamp': self._get_timezone_aware_date(int(transfer_data['timeStamp'])),
             'collection_slug': collection_slug,
         }
     
@@ -269,7 +289,7 @@ class Mapper:
             'is_disabled': nft_data['is_disabled'],
             # 'traits': nft_data[''],
             'token_standard': nft_data['token_standard'].lower(),
-            'updated_at': datetime.fromisoformat(nft_data['updated_at'])
+            'updated_at': self._get_timezone_aware_date(nft_data['updated_at'])
         }
     
     def map_payment_tokens(self, token_data: dict):
@@ -277,7 +297,7 @@ class Mapper:
             'collection_slug': token_data['collection_slug'],
             'contract_address': token_data['contract_address'].lower(),
             'symbol': token_data['symbol'],
-            'decimals': token_data['decimals'],
+            'decimals': int(token_data['decimals']),
             'chain': token_data['chain'],
         }
     
@@ -288,7 +308,7 @@ class Mapper:
             'usdt_price': price_data[''],
             'usdt_conversion_price': price_data[''],
             'eth_conversion_price': price_data[''],
-            'event_timestamp': datetime.fromtimestamp(price_data[''])
+            'event_timestamp': self._get_timezone_aware_date(price_data[''])
         }
     
     def map_opensea_collection_stats(self, collection_stats):
@@ -313,7 +333,7 @@ class Mapper:
     
     def get_nfts_for_collection(self, collection_slug: str, num_pages: int = 10, next_page: str = None):
         r = self.opensea.get_nfts_for_collection(collection_slug, num_pages = num_pages, next_page = next_page)
-        # r = self.alchemy.get_nfts(collection_slug, chain = 'eth-mainnet', next_page = next_page)
+        # r = self.self.alchemy.get_nfts(collection_slug, chain = 'eth-mainnet', next_page = next_page)
         r['nfts'] = [self.map_opensea_nft(i) for i in r['nfts']]
         # print(r['nfts'][0])
         # r['nfts'] = [self.map_alchemy_nft(i, collection_slug=collection_slug) for i in r['nfts']]
@@ -350,7 +370,10 @@ class Mapper:
             r = self.alchemy.get_nft_sales(contract['contract_address'], from_block, next_page=next_page, chain = self.map_chain_to_alchemy_chain(contract['chain']), per_page=per_page)
             events = r['sales']
             # print(len(events))
-            events_mapped = [self.map_alchemy_nft_sale(i, collection_slug, game_id) for i in events]
+            events_mapped = []
+            for i in events:
+                timestamp = self.alchemy.timestamp_from_block(i['blockNumber'])
+                events_mapped.append(self.map_alchemy_nft_sale(i, collection_slug, game_id, timestamp))
             return {
                 'events': unflatten_nested_lists(events_mapped),
                 'next_page': r['next_page']
@@ -371,7 +394,7 @@ class Mapper:
         raise ValueError(f"Invalid event type: {event_type}")
     
     # def get_nft_events_for_collection(self, collection_slug: str, after_date: datetime, before_date: datetime, event_type: str = None, max_recs: int = 1000):
-    #     events = self.opensea.get_events_for_collection(collection_slug, after_date, event_type = event_type, max_recs = max_recs, before_date = before_date)
+    #     events = self.self.opensea.get_events_for_collection(collection_slug, after_date, event_type = event_type, max_recs = max_recs, before_date = before_date)
     #     return [self.map_opensea_nft_event(i) for i in events]
     
     def get_erc20_transfers(self, contract_address: str, after_date: datetime, collection_slug: str):
@@ -385,6 +408,39 @@ class Mapper:
     def get_collection_stats(self, collection_slug: str):
         stats = self.opensea.get_collection_stats(collection_slug)
         return self.map_opensea_collection_stats(stats)
+    
+    def get_nft_traits(self, url: str):
+        try:
+            # Step 1: Make the API request to get the metadata from the URL
+            response_json: dict = self.alchemy.get(url)
+
+            # Step 2: Validate the response is actually a dictionary
+            if not isinstance(response_json, dict):
+                raise ValueError(f"Unexpected response type: Expected dict, got {type(response_json)}")
+
+            # Step 3: Attempt to retrieve the traits from various possible fields in the response
+            traits: list[dict] = (
+                response_json.get('attributes') or
+                response_json.get('properties') or
+                response_json.get('traits')
+            )
+
+            # Step 4: If traits are None, return an empty list to indicate no traits found
+            if traits is None:
+                # self.logger.warning(f"No traits found in response for URL: {url}")
+                return []
+
+            # Step 5: Validate the traits is a list of dictionaries, as expected
+            if not isinstance(traits, list) or not all(isinstance(trait, dict) for trait in traits):
+                raise ValueError("Traits should be a list of dictionaries")
+            # print(traits or "None")
+            return traits
+
+        except Exception as e:
+            # Handle any unexpected exceptions
+            # self.logger.error(f"Error while retrieving traits for URL {url}: {e}")
+            raise
+
 
 def main():
     collection_slug = 'the-sandbox-assets'

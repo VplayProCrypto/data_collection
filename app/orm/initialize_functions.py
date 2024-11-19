@@ -1,27 +1,48 @@
 import os
-from sqlmodel import create_engine, Session
+from sqlmodel import create_engine, Session, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from datetime import datetime
 import json
 import logging
+import asyncio
 
 
-from .models import CollectionDynamic
+import app.keys as keys
+from app.api_requests.opensea import OpenSea
+from app.api_requests.alchemy import Alchemy
+from app.api_requests.etherscan import EtherScan
+
+from app.utils import load_collections_from_file
+from app.orm.tasks import retrieve_missing_traits_celery
+
+from app.orm.models import NFT, CollectionDynamic
+from app.orm.postgres_injector_orm import Injector
+
 from app.api_requests.dappradar import get_uaw_from_dappradar
 from app.api_requests.discord import get_guild_member_count
 from app.api_requests.twitter import get_user_public_metrics
-from app.api_requests.alchemy import Alchemy
-from app.api_requests.etherscan import EtherScan
-from app.api_requests.opensea import OpenSea
-from app.orm.postgres_injector_orm import Injector
-import app.keys as keys
-from app.celery_config import celery_app as app
-from app.utils import load_collections_from_file
 
 from app.logging_config import setup_logging
 
 setup_logging()
+# Set up a specific logger for task queueing logs
+task_logger = logging.getLogger('nft_task_logger')
+
+# Create a file handler for task-specific logs
+task_handler = logging.FileHandler('nft_task_creation.log')  # Store logs in nft_task_creation.log
+task_handler.setLevel(logging.INFO)
+
+# Define a formatter for the task-specific logger
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+task_handler.setFormatter(formatter)
+
+# Add the file handler to the specific task logger
+task_logger.addHandler(task_handler)
+task_logger.setLevel(logging.INFO)
+
+# Disable propagation to prevent logs from going to the global logger
+task_logger.propagate = False
 
 # engine = create_engine(os.environ.get("TIMESCALE_URL"))
 engine = create_engine(keys.timescale_url)
@@ -211,17 +232,39 @@ def add_game(collection_slug: str, num_pages: int = 10000) -> None:
     # TODO NFT OWNERSHIP
 
 # @app.task
+# def retrieve_missing_traits_celery(contract_address: str, token_id: str):
+#     injector = Injector()
+#     injector.retrieve_missing_traits(contract_address=contract_address, token_id = token_id)
+#     # Log success
+#     task_logger.info(f"Successfully processed NFT: contract_address={contract_address}, token_id={token_id}")
+#     del injector
+
+def enqueue_missing_trait_tasks():
+    with Session(engine) as session:
+        statement = select(NFT).where(NFT.status.in_(["new", "failed"]))
+        results = session.exec(statement).all()
+
+        for nft in results:
+            task = retrieve_missing_traits_celery.delay(nft.contract_address, nft.token_id)
+            task_logger.info(
+                f"Task created: task_id={task.id}, contract_address={nft.contract_address}, "
+                f"token_id={nft.token_id}"
+            )
+
+# @app.task
 def add_collection(collection_slug: str):
     injector = Injector()
     
     game_id = injector.mapper._get_game_id(collection_slug)
     injector.insert_collection(collection_slug=collection_slug)
     injector.insert_nfts(collection_slug=collection_slug)
+    injector.retrieve_missing_traits_all(collection_slug=collection_slug)
     injector.insert_nft_events(collection_slug=collection_slug, event_type='sale')
     injector.insert_nft_events(collection_slug=collection_slug, event_type='transfer')
     injector.insert_erc20_transfers(collection_slug)
-    injector.calculate_and_store_rr(game_id)
-    del injector
+    # await asyncio.gather(*concurrent_tasks)
+    # injector.calculate_and_store_rr(game_id)
+    injector.close()
 
 logger = logging.getLogger(__name__)
 # logging.basicConfig(level = logging.DEBUG)
@@ -236,12 +279,15 @@ def add_all_collections(file_path: str):
     # with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
     #     futures = [executor.submit(add_collection, collection) for collection in collections]
     #     concurrent.futures.wait(futures)
-    # collections = ['decentraland']
-    for c in collections:
-        add_collection(c)
+    # collections = ['sandbox']
+    # tasks = [add_collection(collection) for collection in collections]
+    # await asyncio.gather(*tasks)
+    for i in collections:
+        add_collection(i)
 
 def init_db_new():
-    sql_dir = os.path.join('app', 'db', 'raw_sql')
+    base_dir = os.path.join(os.curdir, 'app')
+    sql_dir = os.path.join(base_dir, 'db', 'raw_sql')
     sql_files = [os.path.join(sql_dir, i) for i in ['drop_tables.sql', 'tables.sql', 'hypertables.sql', 'triggers.sql', 'indexes.sql']]
     # sql_files = [os.path.join(sql_dir, i) for i in ['indexes.sql']]
     with Session(engine) as session:
@@ -251,7 +297,7 @@ def init_db_new():
                 sql = file.read()
                 session.exec(text(sql))
         session.commit()
-    add_all_collections('games.json')
+    add_all_collections(os.path.join(base_dir, 'games.json'))
 
 
 def main():

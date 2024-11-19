@@ -1,22 +1,28 @@
-from datetime import datetime
-from typing import List, Set
-from sqlalchemy import text, func, create_engine, inspect, select
-from sqlalchemy.orm import Session
-from sqlmodel import Session as S
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
-from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
-    NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee, NFTDynamic
-from app.api_requests.etherscan import EtherScan
-import app.keys as keys
-from app.orm.rr import calculate_nft_roi, calculate_and_store_collection_roi
-from app.logging_config import setup_logging
 import psycopg2
 import argparse
-from app.orm.transform import Mapper
 import time
 import json
+import asyncio
 import logging
+import requests
+import aiohttp
+from typing import List, Set
+from datetime import datetime, timezone
+from asyncio import Semaphore
+# from sqlmodel import Session as S
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import text, func, create_engine, inspect, select
+from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
+import app.keys as keys
+from app.orm.transform import Mapper
+from app.logging_config import setup_logging
+from app.api_requests.etherscan import EtherScan
+from app.orm.rr import calculate_nft_roi, calculate_and_store_collection_roi
+from .models import Collection, CollectionDynamic, Contract, NFT, NFTEvent, \
+    NftOwnership, ERC20Transfer, PaymentToken, TokenPrice, Fee, NFTDynamic
 
 
 class Injector:
@@ -32,15 +38,21 @@ class Injector:
         #     self.url = f'postgresql+psycopg2://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
         # else:
         #     self.url = f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
-        
-        self.url = keys.timescale_url
-        self.engine = create_engine(self.url)
+        self.engine = create_engine(keys.timescale_url)
+        self.async_engine = create_async_engine(
+            keys.timescale_url_async,
+            pool_size = 10
+        )
         self.mapper = Mapper(eth_api_key = eth_api_key, alchemy_api_key = alchemy_api_key)
         with open('app/games.json') as f:
             self.games = json.loads(f.read())
     
-    def __del__(self):
-        del self.mapper
+    def close(self):
+        self.engine.dispose()
+        self.mapper.close_sessions()
+    
+    # def __del__(self):
+    #     del self.mapper
 
     
     def _save_next_page(self, file_path: str, next_page_link):
@@ -51,6 +63,7 @@ class Injector:
 
         if isinstance(next_page_link, str):
             next_page_link = [next_page_link]
+        
         
         with open(file_path, 'a') as f:
             for i in next_page_link:
@@ -105,27 +118,28 @@ class Injector:
         if len(new_data) < 1:
             return
         with Session(self.engine) as session:
-            try:
-                session.execute(self.get_insert_smt(new_data, model, upsert))
-                session.commit()
-                self.logger.info(f'Time Taken to insert: {time.time() - t}')
-                # print(f'Time Taken to insert: {time.time() - t}')
-            except ProgrammingError as e:
-                if isinstance(e.orig, psycopg2.errors.InFailedSqlTransaction):
-                    # Rollback the session to exit the aborted state
-                    session.rollback()
-                    index_columns = [key.name for key in inspect(model).primary_key]
-                    without_duplicates = self._remove_duplicates(new_data, index_columns)
-                    session.execute(self.get_insert_smt(without_duplicates, model, upsert))
+            # with session.begin():
+                try:
+                    session.execute(self.get_insert_smt(new_data, model, upsert))
                     session.commit()
                     self.logger.info(f'Time Taken to insert: {time.time() - t}')
-                else:
+                    # print(f'Time Taken to insert: {time.time() - t}')
+                except ProgrammingError as e:
+                    if isinstance(e.orig, psycopg2.errors.InFailedSqlTransaction):
+                        # Rollback the session to exit the aborted state
+                        session.rollback()
+                        index_columns = [key.name for key in inspect(model).primary_key]
+                        without_duplicates = self._remove_duplicates(new_data, index_columns)
+                        session.execute(self.get_insert_smt(without_duplicates, model, upsert))
+                        # session.commit()
+                        self.logger.info(f'Time Taken to insert: {time.time() - t}')
+                    else:
+                        raise e
+                except SQLAlchemyError as e:
+                    # This catches other SQLAlchemy-related errors
+                    session.rollback()  # Ensure the session is rolled back on any error
+                    self.logger.error(f"SQLAlchemy error occurred: {e}")
                     raise e
-            except SQLAlchemyError as e:
-                # This catches other SQLAlchemy-related errors
-                session.rollback()  # Ensure the session is rolled back on any error
-                self.logger.error("SQLAlchemy error occurred: ", e)
-                raise e
     
     def insert_collection(self, collection_slug: str):
         self.logger.info(f'Adding Collection: {collection_slug}')
@@ -141,22 +155,24 @@ class Injector:
         # self.logger.info(collection.contracts)
         try:
             with Session(self.engine) as session:
-                session.merge(collection)
-                session.commit()
+                # with session.begin():
+                    session.merge(collection)
+                    session.commit()
         except SQLAlchemyError as e:
             session.rollback()
             raise e
     
     def insert_nfts(self, collection_slug: str, num_pages: int = None):
-        next_page_file = f'next_page/opensea/nft/{collection_slug}.txt'
+        next_page_file = f'app/next_page/opensea/nft/{collection_slug}.txt'
         try:
             with open(next_page_file, 'r') as f:
                 next_page = f.readlines()[-1]
-                self.logger.info(f'Collection: {collection_slug}, page: {next_page}')
+                self.logger.info(f'NFT: Collection: {collection_slug}, page: {next_page}')
         except FileNotFoundError or FileExistsError or IndexError as e:
             next_page = None
         
         if num_pages:
+            self.logger.info(f'NFT: Collection: {collection_slug}, page: {next_page}')
             r = self.mapper.get_nfts_for_collection(collection_slug, num_pages = num_pages, next_page = next_page)
             nfts = r['nfts']
             next_pages = r['next_pages']
@@ -173,11 +189,12 @@ class Injector:
         else:
             saved_pages: int = 0
             while True:
+                self.logger.info(f'NFT: Collection: {collection_slug}, page: {next_page}')
                 r = self.mapper.get_nfts_for_collection(collection_slug, num_pages = 1, next_page = next_page)
                 nfts = r['nfts']
                 # self.logger.info(nfts[:2])
                 next_pages = r['next_pages']
-                if len(nfts) < 1:
+                if len(nfts) < 1 or not next_pages:
                     self.logger.info("All nfts retirved")
                     return
                 try:
@@ -214,25 +231,27 @@ class Injector:
     
     def insert_nft_events_contract(self, collection_slug: str, contract: str, event_type: str = 'transfer'):
         with Session(self.engine) as session:
-            last_event = session.execute(
-                select(NFTEvent)
-                .where(NFTEvent.collection_slug == collection_slug)
-                .where(NFTEvent.event_type == event_type)
-                .where(func.lower(NFTEvent.contract_address) == func.lower(contract['contract_address']))
-                .order_by(NFTEvent.event_timestamp.desc()).limit(1)).scalars().first()
+            # with session.begin():
+                last_event = session.execute(
+                    select(NFTEvent)
+                    .where(NFTEvent.collection_slug == collection_slug)
+                    .where(NFTEvent.event_type == event_type)
+                    .where(func.lower(NFTEvent.contract_address) == func.lower(contract['contract_address']))
+                    .order_by(NFTEvent.event_timestamp.desc()).limit(1))
+                last_event = last_event.scalars().first()
         
-        if last_event is None:
-            self.logger.info(f"no {event_type} event for {collection_slug} found in db. retreving hstory")
-            # self.insert_nft_events_history(collection_slug)
-            # with Session(self.engine) as session:
-                # after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
-            from_block = 0
-        else:
-            from_block = last_event.block_number
-            self.logger.info(f'retrieving after: {last_event.event_timestamp}')
+                if last_event is None:
+                    self.logger.info(f"no {event_type} event for {collection_slug} found in db. retreving hstory")
+                    # self.insert_nft_events_history(collection_slug)
+                    # with Session(self.engine) as session:
+                        # after_date = session.execute(select(Collection.created_date).where(Collection.opensea_slug == collection_slug)).scalars().first()
+                    from_block = 0
+                else:
+                    from_block = last_event.block_number
+                    self.logger.info(f'retrieving after: {last_event.event_timestamp}')
         next_page = None
         if event_type == 'sale':
-            per_page = 20
+            per_page = 100
         else:
             per_page = 1000
         while True:
@@ -254,12 +273,15 @@ class Injector:
     def insert_nft_events(self, collection_slug: str, event_type: str = 'transfer'):
         self.logger.info(f"Adding {event_type} for {collection_slug}")
         with Session(self.engine) as session:
-            collection: Collection = session.execute(
-                select(Collection)\
-                .where(Collection.opensea_slug == collection_slug)\
-                .limit(1)
-            ).scalars().first()
-            contracts = [i.model_dump() for i in collection.contracts]
+            # with session.begin():
+                raw_collection = session.execute(
+                    select(Collection)
+                    .where(Collection.opensea_slug == collection_slug)
+                    .options(selectinload(Collection.contracts))
+                    .limit(1)
+                )
+                collection: Collection = raw_collection.scalars().first()
+                contracts = [i.model_dump() for i in collection.contracts]
         
         self.logger.info(contracts)
         for contract in contracts:
@@ -275,26 +297,29 @@ class Injector:
             prev_last_record = None
             while True:
                 with Session(self.engine) as session:
-                    last_record = session.execute(
-                        select(ERC20Transfer)\
-                        .where(ERC20Transfer.contract_address == erc_contract.lower())\
-                        .order_by(ERC20Transfer.event_timestamp.desc())\
-                        .limit(1)
-                    ).scalars().first()
-                    if last_record:
-                        if prev_last_record == last_record:
-                            self.logger.info('All erc20 transfers inserted')
-                            break
-                        after_date = last_record.event_timestamp
-                        prev_last_record = last_record
-                    else:
-                        self.logger.info(f'no transfers for this erc 20 token: {erc_contract}. Retrieving history')
-                        after_date = session.execute(
-                            select(Collection.created_date)\
-                            .where(Collection.opensea_slug == collection_slug)\
+                    # with session.begin():
+                        raw_last_record = session.execute(
+                            select(ERC20Transfer)\
+                            .where(ERC20Transfer.contract_address == erc_contract.lower())\
+                            .order_by(ERC20Transfer.event_timestamp.desc())\
                             .limit(1)
-                        ).scalars().first()
-                self.logger.info(f'retreiving after: {after_date}, last record: {last_record}')
+                        )
+                        last_record = raw_last_record.scalars().first()
+                        if last_record:
+                            if prev_last_record == last_record:
+                                self.logger.info('All erc20 transfers inserted')
+                                break
+                            after_date = last_record.event_timestamp
+                            prev_last_record = last_record
+                        else:
+                            self.logger.info(f'no transfers for this erc 20 token: {erc_contract}. Retrieving history')
+                            raw_after_date = session.execute(
+                                select(Collection.created_date)\
+                                .where(Collection.opensea_slug == collection_slug)\
+                                .limit(1)
+                            )
+                            after_date = raw_after_date.scalars().first()
+                self.logger.info(f'retreiving after: {after_date}, last record: {last_record or "None"}')
                 t = time.time()
                 transfers = self.mapper.get_erc20_transfers(erc_contract, after_date, collection_slug)
                 self.logger.info(f'Retrival time: {time.time() - t} seconds')
@@ -310,10 +335,105 @@ class Injector:
                     break
     
     def calculate_and_store_rr(self, game_id: str):
-        with S(self.engine) as session:
+        with Session(self.engine) as session:
+            # # with session.begin():
             nft_rois = calculate_nft_roi(session, game_id, self.games)
             self.bulk_insert(nft_rois, NFTDynamic, upsert = False)
             calculate_and_store_collection_roi(session, game_id, self.mapper)
+    
+    def _update_nft_status_to_failed(self, contract_address: str, token_id: str):
+        with Session(self.engine) as session:
+            # with session.begin():
+                nft = session.get(NFT, (contract_address.lower(), token_id))
+                if nft:
+                    nft.status = "failed"
+                    session.add(nft)
+                    session.commit()
+
+
+    def retrieve_missing_traits(self, contract_address: str, token_id: str):
+        try:
+            # Update the status to 'in-progress'
+            with Session(self.engine) as session:
+                # with session.begin():
+                    statement = select(NFT).where(
+                        (func.lower(NFT.contract_address) == func.lower(contract_address)) &
+                        (NFT.token_id == token_id) &
+                        (NFT.status.in_(["new", "failed"]))
+                    ).with_for_update()
+                    
+                    raw_nft = session.execute(statement)
+                    nft = raw_nft.scalar_one_or_none()
+                    if nft:
+                        # nft.status = "in-progress"
+                        url = nft.metadata_url
+                        # session.add(nft)
+                    else:
+                        return  # Skip if the NFT is already in progress or completed
+
+            # Fetch the traits from the external API
+            traits = self.mapper.get_nft_traits(url)
+            # print(traits)
+
+            # Update the traits and set status to 'completed' or 'failed'
+            # # with session.begin():
+            with Session(self.engine):
+                # with session.begin():
+                    nft = session.execute(
+                        select(NFT)
+                        .where(func.lower(NFT.contract_address) == func.lower(contract_address))
+                        .where(NFT.token_id == token_id)
+                    )
+                    nft = nft.scalar_one_or_none()
+
+                    if nft:
+                        nft.status = "completed" if traits else "no-traits"
+                        nft.traits = traits
+                        nft.updated_at = datetime.now(tz=timezone.utc)
+                        session.add(nft)
+                        self.logger.info(f'Traits fetched for NFT: {contract_address}/{token_id}')
+                        session.commit()  # Commit the changes to persist to the database
+
+        except requests.exceptions.RequestException as e:
+        # except aiohttp.ClientError as e:
+            self.logger.error(f"Failed to retrieve traits for {contract_address}/{token_id}: {e}")
+            self._update_nft_status_to_failed(contract_address, token_id)
+        except Exception as e:
+            self.logger.error(f'Error while retieving traits for NFT: {contract_address}/{token_id}: {e.args}')
+            self._update_nft_status_to_failed(contract_address, token_id)
+
+        # except NoResultFound:
+        #     self.logger.error(f"NFT not found in database for contract_address={contract_address}, token_id={token_id}")
+
+
+    # Enqueue the retrieval tasks for all NFTs that are marked 'new' or 'failed'
+    def retrieve_missing_traits_all(self, collection_slug: str):
+        with Session(self.engine) as session:
+            # with session.begin():
+                statement = (
+                    select(
+                        NFT.contract_address,
+                        NFT.token_id
+                    )
+                    .where(NFT.status.in_(["new", "failed"]))
+                    .where(NFT.metadata_url.isnot(None))
+                    .where(NFT.collection_slug == collection_slug)
+                    .order_by(NFT.token_id)
+                )
+                raw_results = session.execute(statement)
+                results = raw_results.all()
+                # sem = Semaphore(50)
+                # def retrieve_with_limit(nft):
+                #     # with sem:
+                #         self.retrieve_missing_traits(nft.contract_address, nft.token_id)
+                # tasks = [retrieve_with_limit(nft) for nft in results]
+                # asyncio.gather(*tasks)
+        
+        for nft in results:
+            self.retrieve_missing_traits(nft.contract_address, nft.token_id)
+
+                # print(nft)
+
         
 
 def main():

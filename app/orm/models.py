@@ -1,8 +1,9 @@
 from typing import Optional, Any
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import Column, Boolean, Integer, String, TIMESTAMP, ForeignKeyConstraint, JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from pgvector.sqlalchemy import Vector
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
 
 class CollectionBase(SQLModel):
@@ -25,8 +26,8 @@ class CollectionBase(SQLModel):
     telegram_url: Optional[str]
     twitter_url: Optional[str]
     instagram_url: Optional[str]
-    created_date: datetime = Field(default=datetime.now(pytz.UTC))
-    updated_at: datetime = Field(default=datetime.now(pytz.UTC))
+    created_date: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc)))
+    updated_at: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc)))
     class Config:
         arbitary_types_allowed = True
 
@@ -82,7 +83,7 @@ class CollectionDynamic(SQLModel, table=True):
     telegram_sentiment: Optional[float]
     rr_val: Optional[float]
     rr_symbol: Optional[str]
-    event_timestamp: datetime = Field(primary_key=True, )
+    event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), default=datetime.now(timezone.utc), primary_key=True))
     class Config:
         arbitary_types_allowed = True
 
@@ -113,7 +114,7 @@ class ERC20Transfer(SQLModel, table=True):
     symbol: str
     decimals: int
     transaction_hash: str = Field(primary_key=True)
-    event_timestamp: datetime = Field(primary_key=True)
+    event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
     collection_slug: Optional[str]
     class Config:
         arbitary_types_allowed = True
@@ -148,19 +149,17 @@ class NFTWithoutStatus(SQLModel):
     image_url: Optional[str]
     metadata_url: Optional[str]
     opensea_url: Optional[str]
-    updated_at: Optional[datetime]
+    updated_at: Optional[datetime] = Field(sa_column=Column(TIMESTAMP(timezone=True)))
     is_nsfw: bool = Field(default=False)
     is_disabled: bool = Field(default=False)
-    traits: Optional[dict] = Field(sa_column=Column(JSON))
+    traits: Optional[list[dict]] = Field(sa_column=Column(JSONB))
     class Config:
         arbitary_types_allowed = True
 
 class NFT(NFTWithoutStatus, table=True):
     __tablename__ = "nft"
 
-    status: str = Field(default = "missing traits")
-
-
+    status: str = Field(default = "new")
 
 class PaymentTokenBase(SQLModel):
     collection_slug: str = Field(
@@ -200,7 +199,7 @@ class NFTEvent(SQLModel, table=True):
     quantity: Optional[int] = Field(default=1)
     price_val: Optional[str]
     price_currency: Optional[str]
-    price_decimals: Optional[str]
+    price_decimals: Optional[int]
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
     class Config:
         arbitary_types_allowed = True
@@ -230,9 +229,9 @@ class NftOwnership(SQLModel, table=True):
     token_id: str = Field(primary_key=True)
     contract_address: str = Field(primary_key=True)
     transaction_hash: str
-    buy_time: datetime = Field(primary_key=True)
+    buy_time: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
     quantity: Optional[int] = Field(default=1)
-    sell_time: Optional[datetime]
+    sell_time: Optional[datetime] = Field(sa_column=Column(TIMESTAMP(timezone=True)))
     collection_slug: str
     game_id: str
 
@@ -275,9 +274,9 @@ class NFTOffer(SQLModel, table=True):
     quantity: Optional[int] = Field(default=1)
     price_val: Optional[str]
     price_currency: Optional[str]
-    price_decimals: Optional[str]
-    start_date: Optional[datetime]
-    expiration_date: Optional[datetime]
+    price_decimals: Optional[int]
+    start_date: Optional[datetime] = Field(sa_column=Column(TIMESTAMP(timezone=True)))
+    expiration_date: Optional[datetime] = Field(sa_column=Column(TIMESTAMP(timezone=True)))
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
     class Config:
         arbitary_types_allowed = True
@@ -300,9 +299,9 @@ class NFTListing(SQLModel, table=True):
     seller: str
     price_val: Optional[str]
     price_currency: Optional[str]
-    price_decimals: Optional[str]
-    start_date: Optional[datetime]
-    expiration_date: Optional[datetime]
+    price_decimals: Optional[int]
+    start_date: Optional[datetime] = Field(sa_column=Column(TIMESTAMP(timezone=True)))
+    expiration_date: Optional[datetime] = Field(sa_column=Column(TIMESTAMP(timezone=True)))
     event_timestamp: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), primary_key=True))
     class Config:
         arbitary_types_allowed = True

@@ -30,7 +30,8 @@ class EtherScan(BaseAPI):
             "apiKey": self.api_key,
         }
 
-        r = self.session.get(self.base_url, params=params).json()
+        # r = self.get(self.base_url, params=params).json()
+        r = self.get(self.base_url, params=params)
         return r["result"]
 
     def get_erc20_transfers(
@@ -51,9 +52,9 @@ class EtherScan(BaseAPI):
             "startblock": str(block_num),
         }
 
-        response = self.session.get(
+        response = self.get(
             self.base_url, headers=self.headers, params=params
-        ).json()
+        )
         # print('-'*50)
         # print('erc20 etherscan')
         # pprint(response)
@@ -94,7 +95,7 @@ class EtherScan(BaseAPI):
             "startblock": str(block_num),
         }
 
-        response = self.session.get(
+        response = self.get(
             self.base_url, headers=self.headers, params=params
         ).json()
 
@@ -137,7 +138,7 @@ class EtherScan(BaseAPI):
             "startblock": str(block_num),
         }
 
-        response = self.session.get(
+        response = self.get(
             self.base_url, headers=self.headers, params=params
         ).json()
 

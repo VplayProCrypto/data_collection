@@ -28,10 +28,10 @@ class Alchemy(BaseAPI):
             "starknet-mainnet",
             "opt-mainnet",
         ]
-        self.session.headers.update(self.headers)
+        # self.session.headers.update(self.headers)
     
-    def __del__(self):
-        self.session.close()
+    # def __del__(self):
+    #     self.close_session()
 
     def get_chain_url(self, chain: str):
         if chain in self.supported_chains:
@@ -52,9 +52,10 @@ class Alchemy(BaseAPI):
             'tokenUriTimeoutInMs': 5000
         }
         try:
-            raw_response = self.session.get(url, params = params)
-            raw_response.raise_for_status()
-            response = raw_response.json()
+            # raw_response = self.get(url, params = params)
+            # raw_response.raise_for_status()
+            # response = raw_response.json()
+            response = self.get(url, params = params)
             return {
                 'nfts': response['nfts'],
                 'next_pages': [response['pageKey']]
@@ -70,9 +71,10 @@ class Alchemy(BaseAPI):
             'tokenId': token_id
         }
         try:
-            raw_response = self.session.get(url, params = params)
-            raw_response.raise_for_status()
-            return raw_response.json()
+            raw_response = self.get(url, params = params)
+            # raw_response.raise_for_status()
+            # return raw_response.json()
+            return raw_response
         except Exception as e:
             logger.error(f"Error retreiving NFT Rarity {e}")
             raise
@@ -106,11 +108,12 @@ class Alchemy(BaseAPI):
         # pprint(params)
         # print('--------------------------------------------------------------')
 
-        # raw_response = self.session.get(url, headers=self.headers, params=params)
+        # raw_response = self.get(url, headers=self.headers, params=params)
         try:
-            raw_response = self.session.get(url, params=params)
-            raw_response.raise_for_status()
-            response = raw_response.json()
+            raw_response = self.get(url, params=params)
+            # raw_response.raise_for_status()
+            # response = raw_response.json()
+            response = raw_response
             return_response = {
                 "sales": response['nftSales'],
                 "next_page": response["pageKey"]
@@ -147,7 +150,7 @@ class Alchemy(BaseAPI):
         if next_page:
             params["pageKey"] = next_page
 
-        response = self.session.get(url, headers=self.headers, params=params).json()
+        response = self.get(url, headers=self.headers, params=params).json()
 
         sales = [
             NFTEvent(
@@ -206,7 +209,7 @@ class Alchemy(BaseAPI):
 
 
         while True:
-            response: dict = self.session.get(url, headers=self.headers, params=params).json()
+            response: dict = self.get(url, headers=self.headers, params=params).json()
             if response.get("nftSales"):
                 for sale_data in response["nftSales"]:
                     # print(datetime.fromtimestamp(self.timestamp_from_block(sale_data["blockNumber"])))
@@ -293,8 +296,8 @@ class Alchemy(BaseAPI):
         if next_page:
             payload["params"][0]["pageKey"] = next_page
 
-        # response = self.session.post(url, headers=self.headers, json=payload).json()
-        response = self.session.post(url, json=payload).json()
+        # response = self.post(url, headers=self.headers, json=payload).json()
+        response = self.post(url, payload=payload)
         try:
             return_response = {"transfers": response['result']['transfers'], "next_page": response["result"].get("pageKey")}
             return return_response
@@ -322,7 +325,7 @@ class Alchemy(BaseAPI):
             'refreshCache': False
         }
         try:
-            raw_response = self.session.post(url, json = payload)
+            raw_response = self.post(url, payload = payload)
             raw_response.raise_for_status()
             return raw_response.json()
         except Exception as e:
@@ -368,7 +371,7 @@ class Alchemy(BaseAPI):
         if next_page:
             payload["params"][0]["pageKey"] = next_page
 
-        response = self.session.post(url, headers=self.headers, json=payload).json()
+        response = self.post(url, headers=self.headers, json=payload).json()
 
         transfers = []
 
@@ -461,7 +464,7 @@ class Alchemy(BaseAPI):
         if next_page != "start":
             payload["params"][0]["pageKey"] = next_page
 
-        response = self.session.post(url, headers=self.headers, json=payload).json()
+        response = self.post(url, headers=self.headers, json=payload).json()
 
         if response["result"].get("transfers"):
             for transfer_data in response["result"]["transfers"]:
@@ -541,7 +544,7 @@ class Alchemy(BaseAPI):
             "method": "eth_getBlockByNumber",
             "params": [hex(block_num), False],
         }
-        r = self.session.post(url, headers=self.headers, json=payload).json()
+        r = self.post(url, headers=self.headers, payload=payload)
         t = int(r["result"]["timestamp"], 16)
         # print('-'*100)
         # print('timestamp from block')

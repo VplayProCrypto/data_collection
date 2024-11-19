@@ -1,7 +1,8 @@
 from .initialize_functions import add_all_collections
+import asyncio
 
-def main():
-    add_all_collections('app/games.json')
+async def main():
+    await add_all_collections('app/games.json')
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

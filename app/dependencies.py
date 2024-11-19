@@ -1,6 +1,7 @@
 from typing import Union, Annotated
 from fastapi import Depends
 from sqlmodel import Session, create_engine
+from pydantic import BaseModel, Field
 from .keys import timescale_url
 
 engine = create_engine(timescale_url)
@@ -11,10 +12,12 @@ async def get_session():
 
 sessionDeps = Annotated[Session, Depends(get_session)]
 
-class filterQueryParams:
-    def __init__(self, tags: Union[str, None] = None, skip: int = 0, limit: int = 100):
-        self.tags = tags
-        self.skip = skip
-        self.limit = limit
+class filterQueryParamsBase(BaseModel):
+    limit: int = Field(default=10, le=100, gt=0)
+    skip: int = Field(default=0, gt=0)
 
+class filterQueryParams(filterQueryParamsBase):
+    tags: str = Field(default=None)
+
+filterBaseDeps = Annotated[filterQueryParamsBase, Depends(filterQueryParamsBase)]
 filterDeps = Annotated[filterQueryParams, Depends(filterQueryParams)]

@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, create_engine, select, func, Session, cast
 from sqlalchemy import desc, Float, Integer
+from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 import time
 from typing import List, Optional
@@ -44,6 +45,9 @@ def calculate_average_buy_price(session: Session, ownership: NftOwnership) -> fl
     avg_price = sum(avg_price_recs) / len(avg_price_recs)
     print(f'average nft price time: {time.time() - t} seconds. Price: {avg_price}')
     return avg_price or None
+
+# def cluster_nft(session: Session, game_id):
+
 
 # Function to calculate ROI for each NFT
 def calculate_nft_roi(session: Session, game_id: str, games: dict):
@@ -93,7 +97,7 @@ def calculate_nft_roi(session: Session, game_id: str, games: dict):
         )
     )
 
-    results = session.exec(roi_query).all()
+    results = session.execute(roi_query).all()
     logger.info(f"NFT ROIs Calculated. Time taken {time.time() - t}")
     return [
         {
@@ -129,7 +133,7 @@ def calculate_collection_sale_stats(session: Session, collection_slug: str):
 # Function to calculate and store ROI for each collection within the specified game
 def calculate_and_store_collection_roi(session: Session, game_id: str, mapper: Mapper):
     # Get all collections within the specified game
-    collections = session.exec(
+    collections = session.execute(
         select(Collection.opensea_slug).where(Collection.game_id == game_id)
     ).all()
     
@@ -163,60 +167,61 @@ def calculate_and_store_collection_roi(session: Session, game_id: str, mapper: M
         # ).all()
 
         t = time.time()
-        collection_rois = session.exec(
-            select(
-                NFTDynamic.collection_slug,
-                NFTDynamic.rr_symbol,
-                func.avg(NFTDynamic.rr_val)
-            )
-            .where(NFTDynamic.collection_slug == collection_slug)
-            .group_by(NFTDynamic.collection_slug, NFTDynamic.rr_symbol)
-        ).first()
-        logger.info(f"Collection ROI calculated for game {game_id}. Time taken {time.time() - t}")
-
-        if not collection_rois:
-            print(f"No collection roi present for {collection_slug}")
-            return
-        _, rr_symbol, avg_collection_roi = collection_rois
-        # Calculate average ROI for the collection
-        # if latest_nft_rois:
-        #     avg_collection_roi = sum([i.rr_val for i in latest_nft_rois]) / len(latest_nft_rois)
-        # else:
-        #     avg_collection_roi = None
-        
-        # print('-----------------------')
-        # print(avg_collection_roi)
-        # print('-----------------------')
-
-        collection_dynamic = None
-
-        # tot_avg_price = calculate_average_buy_price(session)
-        
-        total_sales, total_volume, total_average_price = calculate_collection_sale_stats(session, collection_slug)
-        other_stats = mapper.get_collection_stats(collection_slug)
-        if collection_rois:
-            if collection_dynamic:
-                collection_dynamic.roi = avg_collection_roi
-                collection_dynamic.event_timestamp = datetime.now().replace(tzinfo=pytz.UTC)
-            else:
-                collection_dynamic = CollectionDynamic(
-                    collection_slug=collection_slug,
-                    game_id=game_id,
-                    rr_val=avg_collection_roi,
-                    # rr_symbol = latest_nft_rois[0].rr_symbol,
-                    rr_symbol = rr_symbol,
-                    total_average_price=total_average_price,
-                    total_sales=total_sales,
-                    total_volume=total_volume,
-                    total_market_cap=other_stats['market_cap'],
-                    floor_price=other_stats['floor_price'],
-                    floor_price_currency=other_stats['floor_price_currency'],
-                    total_num_owners=other_stats['num_owners'],
-                    event_timestamp = datetime.now(pytz.UTC).replace(tzinfo=pytz.UTC),
+        with session.begin():
+            collection_rois = session.execute(
+                select(
+                    NFTDynamic.collection_slug,
+                    NFTDynamic.rr_symbol,
+                    func.avg(NFTDynamic.rr_val)
                 )
+                .where(NFTDynamic.collection_slug == collection_slug)
+                .group_by(NFTDynamic.collection_slug, NFTDynamic.rr_symbol)
+            ).first()
+            logger.info(f"Collection ROI calculated for game {game_id}. Time taken {time.time() - t}")
+
+            if not collection_rois:
+                print(f"No collection roi present for {collection_slug}")
+                return
+            _, rr_symbol, avg_collection_roi = collection_rois
+            # Calculate average ROI for the collection
+            # if latest_nft_rois:
+            #     avg_collection_roi = sum([i.rr_val for i in latest_nft_rois]) / len(latest_nft_rois)
+            # else:
+            #     avg_collection_roi = None
             
-            session.add(collection_dynamic)
-            session.commit()
+            # print('-----------------------')
+            # print(avg_collection_roi)
+            # print('-----------------------')
+
+            collection_dynamic = None
+
+            # tot_avg_price = calculate_average_buy_price(session)
+            
+            total_sales, total_volume, total_average_price = calculate_collection_sale_stats(session, collection_slug)
+            other_stats = mapper.get_collection_stats(collection_slug)
+            if collection_rois:
+                if collection_dynamic:
+                    collection_dynamic.roi = avg_collection_roi
+                    collection_dynamic.event_timestamp = datetime.now().replace(tzinfo=pytz.UTC)
+                else:
+                    collection_dynamic = CollectionDynamic(
+                        collection_slug=collection_slug,
+                        game_id=game_id,
+                        rr_val=avg_collection_roi,
+                        # rr_symbol = latest_nft_rois[0].rr_symbol,
+                        rr_symbol = rr_symbol,
+                        total_average_price=total_average_price,
+                        total_sales=total_sales,
+                        total_volume=total_volume,
+                        total_market_cap=other_stats['market_cap'],
+                        floor_price=other_stats['floor_price'],
+                        floor_price_currency=other_stats['floor_price_currency'],
+                        total_num_owners=other_stats['num_owners'],
+                        event_timestamp = datetime.now(pytz.UTC).replace(tzinfo=pytz.UTC),
+                    )
+                
+                session.add(collection_dynamic)
+                session.commit()
 
 # Main function to execute the batch processing and calculations
 def main():

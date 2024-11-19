@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS public.nft
     is_nsfw boolean not null default false,
     is_disabled boolean not null default false,
     traits jsonb,
-    status character varying not null default 'missing traits',
+    status character varying not null default 'new',
     CONSTRAINT nft_pkey primary key (token_id, contract_address),
     CONSTRAINT nft_opensea_slug_fkey FOREIGN KEY (collection_slug)
         REFERENCES public.collection (opensea_slug) match simple
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS public.nft_events
     quantity integer default 1,
     price_val character varying,
     price_currency character varying,
-    price_decimals character varying,
+    price_decimals integer varying,
     event_timestamp timestamp with time zone not null,
     CONSTRAINT nft_events_pkey primary key (contract_address, token_id, event_timestamp)
     -- CONSTRAINT nft_events_token_id_fkey FOREIGN KEY (token_id, contract_address)
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS public.nft_offers
     quantity integer default 1,
     price_val character varying,
     price_currency character varying,
-    price_decimals character varying,
+    price_decimals integer varying,
     start_date timestamp with time zone,
     expiration_date timestamp with time zone,
     event_timestamp timestamp with time zone not null,
@@ -255,7 +255,7 @@ CREATE TABLE IF NOT EXISTS public.nft_listings
     seller character varying not null,
     price_val character varying,
     price_currency character varying,
-    price_decimals character varying,
+    price_decimals integer varying,
     start_date timestamp with time zone,
     expiration_date timestamp with time zone,
     event_timestamp timestamp with time zone not null,
@@ -293,3 +293,9 @@ CREATE TABLE messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_summary BOOLEAN NOT NULL DEFAULT false
 );
+
+-- create table pagination_keys(
+--     collection_slug character varying,
+--     nft_page character varying,
+    
+-- )

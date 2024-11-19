@@ -1,5 +1,6 @@
 import json
 import os
+# from fastapi import HTTPException
 # import api_requests
 
 # def get_error_message(request: api_requests.Response):
@@ -71,3 +72,8 @@ def load_collections_from_file(file_name):
         collections.extend(games[g]['collection_slugs'])
     print(collections)
     return collections
+
+# def get_http_error(e: Exception):
+#     return {
+#         'loc':
+#     }
