@@ -1,4 +1,4 @@
-from typing import Union, Annotated
+from typing import Union, Annotated, Optional
 from fastapi import Depends
 from sqlmodel import Session, create_engine
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ class filterQueryParamsBase(BaseModel):
     skip: int = Field(default=0, ge=0)
 
 class filterQueryParams(filterQueryParamsBase):
-    tags: str = Field(default=None)
+    tags: Optional[str] = Field(default=None)
 
 filterBaseDeps = Annotated[filterQueryParamsBase, Depends(filterQueryParamsBase)]
 filterDeps = Annotated[filterQueryParams, Depends(filterQueryParams)]

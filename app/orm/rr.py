@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, create_engine, select, func, Session, cast
 from sqlalchemy import desc, Float, Integer
+from sqlalchemy.orm import Session as alchemy_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 import time
@@ -46,11 +47,16 @@ def calculate_average_buy_price(session: Session, ownership: NftOwnership) -> fl
     print(f'average nft price time: {time.time() - t} seconds. Price: {avg_price}')
     return avg_price or None
 
-# def cluster_nft(session: Session, game_id):
-
+def cluster_nft(session: alchemy_session, game_id: str):
+    t = time.time()
+    nfts_with_trait = session.exec(
+        select(NFT.contract_address, NFT.token_id, NFT.traits)
+        .where(NFT.game_id == game_id)
+        .where(NFT.traits.isnot(None))
+    ).scalars().all()
 
 # Function to calculate ROI for each NFT
-def calculate_nft_roi(session: Session, game_id: str, games: dict):
+def calculate_nft_roi(session: alchemy_session, game_id: str, games: dict):
     t = time.time()
     token_contracts = [i.lower() for i in games[game_id]['erc20Tokens']]
     # Total earnings subquery
