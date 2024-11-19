@@ -49,7 +49,7 @@ def calculate_average_buy_price(session: Session, ownership: NftOwnership) -> fl
 
 def cluster_nft(session: alchemy_session, game_id: str):
     t = time.time()
-    nfts_with_trait = session.exec(
+    nfts_with_trait = session.execute(
         select(NFT.contract_address, NFT.token_id, NFT.traits)
         .where(NFT.game_id == game_id)
         .where(NFT.traits.isnot(None))
