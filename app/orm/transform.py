@@ -196,7 +196,8 @@ class Mapper:
         mapped_event['seller'] = sale_data['sellerAddress']
         mapped_event['price_val'] = sale_data['sellerFee']['amount']
         mapped_event['price_currency'] = sale_data['sellerFee']['symbol']
-        mapped_event['price_decimals'] = int(sale_data['sellerFee']['decimals'])
+        if sale_data['sellerFee']['decimals']:
+            mapped_event['price_decimals'] = int(sale_data['sellerFee']['decimals'])
         mapped_event['block_number'] = sale_data['blockNumber']
         mapped_event['quantity'] = int(sale_data['quantity'])
 

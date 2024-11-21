@@ -39,7 +39,7 @@ async def get_collection(game_id: str, session: sessionDeps) -> list[CollectionW
 
     return collections
 
-@router.get('/{collection_slug}/stats')
+@router.get('/{collection_slug}/stats', response_model = list[CollectionDynamic])
 async def get_stats(*, collection_slug: str, start_date: datetime | None = None, session: sessionDeps) -> list[CollectionDynamic]:
     try:
         if start_date:

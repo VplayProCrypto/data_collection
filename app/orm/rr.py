@@ -1,17 +1,22 @@
-from sqlmodel import SQLModel, create_engine, select, func, Session, cast
-from sqlalchemy import desc, Float, Integer
-from sqlalchemy.orm import Session as alchemy_session
-from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
 import time
-from typing import List, Optional
-import pytz
-from logging import Logger
 import json
 from pprint import pprint
-from app.orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
+from logging import Logger
+from datetime import datetime, timezone
+from sqlalchemy import desc, Float, Integer
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session as alchemy_session
+from sqlmodel import SQLModel, create_engine, select, func, Session, cast
+
+# from pyspark.sql import SparkSession
+# from pyspark.sql.functions import col, explode, udf
+# from pyspark.sql.types import StringType, MapType
+# from pyspark.ml.clustering import KMeans
+# from pyspark.ml.feature import VectorAssembler
+
 import app.keys as keys
 from app.orm.transform import Mapper
+from app.orm.models import NFT, NFTDynamic, NFTEvent, Collection, CollectionDynamic, NftOwnership, ERC20Transfer
 
 logger = Logger(__name__)
 
@@ -19,11 +24,11 @@ def sell_time_correction(ownership: NftOwnership):
     if ownership.sell_time:
         sell_time = ownership.sell_time
     else:
-        sell_time = datetime.now(pytz.UTC)
+        sell_time = datetime.now(timezone.utc)
     return sell_time
     
 # Function to fetch NFT ownership data in batches
-def fetch_nft_ownership_batch(session: Session, batch_size: int, offset: int, game_id: str) -> List[NftOwnership]:
+def fetch_nft_ownership_batch(session: Session, batch_size: int, offset: int, game_id: str) -> list[NftOwnership]:
     return session.exec(
         select(NftOwnership).where(NftOwnership.game_id == game_id).limit(batch_size).offset(offset)
     ).all()
@@ -47,13 +52,30 @@ def calculate_average_buy_price(session: Session, ownership: NftOwnership) -> fl
     print(f'average nft price time: {time.time() - t} seconds. Price: {avg_price}')
     return avg_price or None
 
+def preprocess_nft_data(nft_data: list[NFT]):
+    return [i.model_dump() for i in nft_data]
+
 def cluster_nft(session: alchemy_session, game_id: str):
     t = time.time()
+    # spark: SparkSession = (
+    #     SparkSession.builder
+    #     .appName('NFT Clustering')
+    #     .config('spark.jars.packages', 'org.postgresql:postgresql:42.2.0')
+    #     .getOrCreate()
+    # )
+
+    # df = (
+    #     spark.read
+    #     .format('jdbc')
+    #     .option('url')
+    # )
     nfts_with_trait = session.execute(
         select(NFT.contract_address, NFT.token_id, NFT.traits)
         .where(NFT.game_id == game_id)
         .where(NFT.traits.isnot(None))
     ).scalars().all()
+
+
 
 # Function to calculate ROI for each NFT
 def calculate_nft_roi(session: alchemy_session, game_id: str, games: dict):
@@ -110,7 +132,7 @@ def calculate_nft_roi(session: alchemy_session, game_id: str, games: dict):
             'collection_slug': r.collection_slug,
             'rr_symbol': r.symbol,
             'rr_val': r.roi,
-            'event_timestamp': datetime.now(pytz.UTC),
+            'event_timestamp': datetime.now(timezone.utc),
             'token_id': r.token_id,
             'contract_address': r.contract_address
         }
@@ -208,7 +230,7 @@ def calculate_and_store_collection_roi(session: Session, game_id: str, mapper: M
             if collection_rois:
                 if collection_dynamic:
                     collection_dynamic.roi = avg_collection_roi
-                    collection_dynamic.event_timestamp = datetime.now().replace(tzinfo=pytz.UTC)
+                    collection_dynamic.event_timestamp = datetime.now().replace(tzinfo=timezone.utc)
                 else:
                     collection_dynamic = CollectionDynamic(
                         collection_slug=collection_slug,
@@ -223,7 +245,7 @@ def calculate_and_store_collection_roi(session: Session, game_id: str, mapper: M
                         floor_price=other_stats['floor_price'],
                         floor_price_currency=other_stats['floor_price_currency'],
                         total_num_owners=other_stats['num_owners'],
-                        event_timestamp = datetime.now(pytz.UTC).replace(tzinfo=pytz.UTC),
+                        event_timestamp = datetime.now().replace(tzinfo=timezone.utc),
                     )
                 
                 session.add(collection_dynamic)

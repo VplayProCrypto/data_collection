@@ -1,20 +1,27 @@
-import psycopg2
-import argparse
 import time
 import json
 import asyncio
-import logging
-import requests
 import aiohttp
+import logging
+import argparse
+import requests
+import psycopg2
 from typing import List, Set
-from datetime import datetime, timezone
 from asyncio import Semaphore
+from datetime import datetime, timezone
 # from sqlmodel import Session as S
+
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import text, func, create_engine, inspect, select
 from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, explode, udf
+from pyspark.sql.types import StringType, MapType
+from pyspark.ml.clustering import KMeans
+from pyspark.ml.feature import VectorAssembler
 
 import app.keys as keys
 from app.orm.transform import Mapper
@@ -43,6 +50,14 @@ class Injector:
             keys.timescale_url_async,
             pool_size = 10
         )
+        # self.spark: SparkSession = (
+        #     SparkSession.builder
+        #     .appName('NFT Data Processing')
+        #     .getOrCreate()
+        # )
+        self.db_url_spark = f'jdbc:postgresql://{keys.host}:{keys.port}/{keys.database}'
+        self.db_username = keys.username
+        self.db_pasword = keys.password
         self.mapper = Mapper(eth_api_key = eth_api_key, alchemy_api_key = alchemy_api_key)
         with open('app/games.json') as f:
             self.games = json.loads(f.read())
@@ -408,6 +423,12 @@ class Injector:
 
     # Enqueue the retrieval tasks for all NFTs that are marked 'new' or 'failed'
     def retrieve_missing_traits_all(self, collection_slug: str):
+        # with Session(self.engine) as session:
+        #     total_count = session.query(
+        #         select(NFT)
+        #         .where(NFT.collection_slug == collection_slug)
+        #     ).count()
+        
         with Session(self.engine) as session:
             # with session.begin():
                 statement = (
@@ -433,7 +454,18 @@ class Injector:
             self.retrieve_missing_traits(nft.contract_address, nft.token_id)
 
                 # print(nft)
-
+    
+    def spark_read(self, db_tablename: str):
+        return (
+            self.spark.read
+            .format('jdbc')
+            .option('url', self.db_url_spark)
+            .option('dbtable', db_tablename)
+            .option('user', self.db_username)
+            .option('password', self.db_pasword)
+            .option('driver', 'org.postgresql.Driver')
+            .load()
+        )
         
 
 def main():

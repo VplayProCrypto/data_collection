@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS public.nft
     description character varying,
     image_url character varying,
     metadata_url character varying,
+    cluster integer,
     opensea_url character varying,
     updated_at timestamp with time zone,
     is_nsfw boolean not null default false,
